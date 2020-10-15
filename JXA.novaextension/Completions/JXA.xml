@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<completions>
+	<!-- ".foo" -->
+	<provider name="jxa.properties">
+		<syntax>javascript+jxa</syntax>
+		<selector>*:not(string,comment)</selector>
+		<expression>(?&lt;=\.)([a-zA-Z_][a-zA-Z0-9_]*)?</expression>
+
+		<symbols type="function">
+			<behavior>
+				<arguments prefix="(" suffix=")" separator=", " />
+			</behavior>
+		</symbols>
+		<symbols type="method">
+			<behavior>
+				<arguments prefix="(" suffix=")" separator=", " />
+			</behavior>
+		</symbols>
+		<symbols type="property,getter,setter" />
+
+		<set>jxa.core.automation</set>
+		<set>jxa.core.application</set>
+		<set>jxa.core.objc</set>
+		<set>jxa.core.progress</set>
+	</provider>
+
+	<!-- JXA globals -->
+	<set name="jxa.core.application">
+		<behavior suffix="\(">
+			<append>()</append>
+		</behavior>
+		<completion string="currentApplication" symbol="method" />
+	</set>
+
+	<set name="jxa.core.automation">
+		<behavior suffix="\(">
+			<append>()</append>
+		</behavior>
+		<completion string="getDisplayString" symbol="method" />
+	</set>
+
+	<set name="jxa.core.objc">
+		<behavior suffix="\(">
+			<append>()</append>
+		</behavior>
+    <completion string="bindFunction" symbol="method" />
+    <completion string="deepUnwrap" symbol="method" />
+    <completion string="import" symbol="method" />
+    <completion string="registerSubclass" symbol="method" />
+    <completion string="unwrap" symbol="method" />
+    <completion string="wrap" symbol="method" />
+	</set>
+
+	<set name="jxa.core.progress">
+		<behavior suffix="\(">
+			<append>()</append>
+		</behavior>
+    <completion string="additionalDescription" symbol="property" />
+    <completion string="completedUnitCount" symbol="property" />
+    <completion string="description" symbol="property" />
+    <completion string="totalUnitCount" symbol="property" />
+    </set>
+</completions>

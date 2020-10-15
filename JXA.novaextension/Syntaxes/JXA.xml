@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<syntax name="jxa" subsyntax="true">
+	<meta>
+		<name>macOS JXA subsyntax</name>
+		<type>script</type>
+	</meta>
+
+	<collections>
+		<!-- Definitions -->
+		<collection name="definitions">
+			<!-- ObjC bridge function binding -->
+			<scope name="jxa.definition.function.objc">
+				<symbol type="function" scope="global" arguments="false">
+					<display-name>
+						<component variable="name" prepend="$." />
+					</display-name>
+				</symbol>
+				<starts-with>
+					<expression>(?&lt;=\.)(bindFunction)(?=\s*\(["'](\w+))</expression>
+					<capture number="1" name="jxa.identifier.method.binding" />
+					<capture number="2" name="jxa.identifier.function.name" />
+				</starts-with>
+				<ends-with>
+					<expression>(?&lt;=\))</expression>
+				</ends-with>
+				<subscopes>
+					<include syntax="javascript" collection="arguments" />
+				</subscopes>
+			</scope>
+		</collection>
+
+		<!-- Identifiers -->
+		<collection name="identifiers">
+			<!-- JXA globals -->
+			<scope name="jxa.identifier.core.global">
+				<strings prefix="(?&lt;!\.)">
+					<string>Application</string>
+					<string>Automation</string>
+					<string>Progress</string>
+					<string>Library</string>
+					<string>ObjC</string>
+					<string>ObjectSpecifier</string>
+					<string>Path</string>
+					<string>Ref</string>
+				</strings>
+			</scope>
+			<!-- ObjC Bridge “$(.|())” shorthand -->
+			<scope name="jxa.identifier.core.global.objc">
+				<strings prefix="(?&lt;!\.)" word-boundary="false">
+					<string>$</string>
+				</strings>
+			</scope>
+			<!-- JXA global functions-->
+			<scope name="jxa.identifier.core.function">
+				<strings prefix="(?&lt;!\.)" suffix="(?=\()">
+					<string>delay</string>
+				</strings>
+			</scope>
+      <!-- The next two are contextual: they will only work if '$' is used literally, e.g.
+           `const objcGlobal = $; objcGlobal.NSString.stringWithString('foo')` will not be
+           recognised. As using '$' as is is the mainstream usage case, improvements in
+           legibility and completion more than compensate for this limitation (IMO). -->
+			<!-- ObjC Bridge types (e.g. "NSString") -->
+			<scope name="jxa.identifier.type.objc">
+        <symbol type="type" scope="private" />
+				<expression>(?&lt;=\$\.)([A-Z]{2}([A-Z][A-Za-z0-9]+)+)(?!\()\b</expression>
+			</scope>
+			<!-- ObjC Bridge functions (e.g. "NSStringFromRect()") -->
+			<scope name="jxa.identifier.function.objc">
+        <symbol type="function" scope="private" />
+				<expression>(?&lt;=\$\.)([A-Z]{2}([A-Z][A-Za-z0-9]+)+(?=\())\b</expression>
+			</scope>
+		</collection>
+	</collections>
+</syntax>

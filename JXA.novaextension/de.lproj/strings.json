@@ -1,0 +1,37 @@
+{
+  "JavaScript for Automation (JXA) support in Nova.": "JavaScript for Automation (JXA)-Unterstützung für Nova.",
+
+  "Validation": "Validierung",
+  "Whether and when automatic validation of open JXA files should be performed.": "Modus, in dem offene JXA-Dateien validiert werden (wenn überhaupt).",
+  "Disabled": "Aus",
+  "On Change": "Bei jeder Änderung",
+  "On Save": "Beim Sichern",
+
+  "Open file in Script Editor": "Datei im Skript-Editor öffnen",
+  "Send selection to Script Editor": "Auswahl an Skript-Editor senden",
+
+  "Compile JXA Script": "JXA-Skript kompilieren",
+  "Compiles the current JavaScript for Automation (JXA) source file to a binary JXA script.": "Kompiliert die aktuelle JXA-Quelltextdatei zu einem binären JXA-Skript.",
+  "Build directory": "Build-Ordner",
+  "The directory where to put the compiled scripts, relative to the project root.": "Ordner, in dem die kompilierten Skripte gespeichert werden sollen (als relativer Pfad zum Projekt).",
+  "Output format settings": "Ausgabeformat-Optionen",
+  "The following options dictate what kind of script will be created.": "Die folgenden Optionen bestimmen, welche Art binäre Skriptdatei beim Kompilieren erstellt wird.",
+  "Script file format": "Skriptdatei-Format",
+  "The script format to compile to.": "Das binäre Skriptformat, in das kompiliert werden soll.",
+  "Compiled script file (.scpt)": "Kompilierte Skript-Datei (.scpt)",
+  "Compiled script bundle (.scptd)": "Kompiliertes Skript-Bundle (.scptd)",
+  "Applet or Droplet (.app)": "Applet oder Droplet (.app)",
+  "Save the resulting script as execute-only": "Kompiliertes Skript als ›nur ausführen‹ speichern",
+  "Compile the script for execution only: the source code will not be available for editing in the compiled file.": "Kompiliert das Skript für die reine Ausführung; der Quelltext ist im kompilierten Skript nicht zur Bearbeitung verfügbar.",
+  "Applet / Droplet settings": "Applet- / Droplet-Optionen",
+  "The following options are only relevant when creating a new bundled applet or droplet.": "Die folgenden Optionen sind nur bei der Erstellung von kompilierten Applets oder Droplets relevant.",
+  "Stay-open applet": "Applet nach Skript-Ausführung nicht beenden",
+  "Use startup screen": "Startbildschirm anzeigen",
+
+  "Execute JXA script": "JXA-Skript ausführen",
+  "Execute the current JavaScript for Automation (JXA) source code.": "Führt den aktuellen JavaScript for Automation (JXA)-Quelltext aus",
+  "Run selection": "Auswahl ausführen",
+  "Run the code of the primary selection in the editor. If this is unset, or if this is set and no code is selected, the whole source file will be run.": "Im Editor ausgewählten Quelltext ausführen (nur Primärauswahl). Ist kein Text ausgewählt oder diese Option abgeschaltet, wird der gesamte Quelltext der Datei ausgeführt",
+  "Human readable output": "Lesefreundliche Ausgabe",
+  "Printing results in human-readable form means strings do not have quotes around them, characters are not escaped, brackets for arrays and braces for objects are omitted, etc. Apple consider this as “generally more useful”, but it can introduce ambiguities. To see the results in an unambiguous form that could be recompiled into the same value, switch this off.": "Bei Ausgabe im lesefreundlichen Format werden die Begrenzer um Datentypen (also Anführungsstriche um Strings, eckige Klammern um Arrays und geschweifte Klammern um Objekte) ausgelassen, ebenso Escape-Zeichen in Strings u.a.m. Apple hält diese Darstellungsweise für »allgemein hilfreicher«, aber sie kann zweideutig sein. Für eine eindeutige, so wieder als Quelltext verwendbare Darstellung sollte diese Option ausgeschaltet sein."
+}

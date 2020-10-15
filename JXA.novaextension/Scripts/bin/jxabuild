@@ -1,0 +1,54 @@
+#!/bin/sh
+#
+# JXA binary script builder. Compiles the JXA source file passed as first argument with
+# `osacompile`, optionally stripping the extension specified as second argument from
+# the file name (pass '-' as the first argument to compile from stdin). Except for the file
+# ($1) and the extension to strip ($2), all parameters are passed as environment variables
+# to avoid unwanted side effects when one or both of the first two arguments are missing:
+# - JXABUILD_DIR - path to the directory to output the compiled script to (created if missing).
+# - JXABUILD_FORMAT - the compiled script extension to use, determining the output format.
+# - JXABUILD_EXEONLY - whether to compile a run-only script (without readable source).
+# - JXABUILD_STAYOPEN and JXABUILD_SPLASHSCREEN - applet / droplet only options.
+# See `man osacompile` for more details.
+abort_prefix="Aborting:"
+
+# Catch tasks started out of non-document tabs.
+if [ "-$1" = "-" ]; then
+	echo "$abort_prefix no script file to build from." >&2
+	exit 1
+fi
+
+# Catch missing target information.
+if [ "-$JXABUILD_DIR" = "-" ]; then
+  echo "$abort_prefix no build directory set." >&2
+  exit 1
+elif [ "-$JXABUILD_FORMAT" = "-" ]; then
+  echo "$abort_prefix no build format set." >&2
+  exit 1
+fi
+
+# Create the build directory if needed.
+if [ ! -e "$JXABUILD_DIR" ]; then
+	mkdir -p "$JXABUILD_DIR"
+	if [ $? > 0 ]; then
+		echo "$abort_prefix could not create build directory '$JXABUILD_DIR'." >&2
+		exit 1
+	fi
+fi
+
+# Ensure we have access to the build directory.
+if [ ! -d "$JXABUILD_DIR" ]; then
+	echo "$abort_prefix build directory '$JXABUILD_DIR' not available." >&2
+	exit 1
+elif [ ! -w "$JXABUILD_DIR" ]; then
+	echo "$abort_prefix build directory '$JXABUILD_DIR' not writable." >&2
+	exit 1
+fi
+
+# Construct the command line.
+flags=""
+if [ "$JXABUILD_EXEONLY" = "true" ]; then flags="$flags -x"; fi
+if [ "$JXABUILD_STAYOPEN" = "true" ]; then flags="$flags -s"; fi
+if [ "$JXABUILD_SPLASHSCREEN" = "true" ]; then flags="$flags -u"; fi
+outfile="$JXABUILD_DIR/$(basename "$1" .$2)."$JXABUILD_FORMAT
+/usr/bin/osacompile -l JavaScript -o "$outfile" $flags "$1"
