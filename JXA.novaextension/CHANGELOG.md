@@ -1,3 +1,7 @@
+## Version 1.0.1
+
+Hotfix release: ensure included binaries are executable. Fixes tasks, commands and validation failing in 1.0.0.
+
 ## Version 1.0.0
 
 Initial release:
