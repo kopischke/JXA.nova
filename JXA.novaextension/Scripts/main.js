@@ -1,5 +1,27 @@
 const { JXAValidator } = require('./lib/JXAValidator')
 const { jxaToEditor } = require('./lib/commands')
+const { binDir } = require('./lib/extension')
+
+/**
+ * Ensure included binaries are executable.
+ * @function activate
+ */
+exports.activate = function () {
+  const binaries = nova.fs.listdir(binDir)
+    .map(name => nova.path.join(binDir, name))
+    .filter(path => {
+      return nova.fs.stat(path).isFile() && !nova.fs.access(path, nova.fs.X_OK)
+    })
+
+  if (binaries.length) {
+    const stderr = []
+    const args = { args: ['+x'].concat(binaries) }
+    const chmod = new Process('/bin/chmod', args)
+    chmod.onStderr(line => stderr.push(line))
+    chmod.onDidExit(code => { if (code > 0) console.error(stderr.join('')) })
+    chmod.start()
+  }
+}
 
 /**
  * The syntax for which to register the validator.
