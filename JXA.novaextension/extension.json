@@ -51,7 +51,7 @@
   "commands": {
     "editor": [
       {
-        "title": "Open file in Script Editor",
+        "title": "Open file in Script Editor…",
         "command": "fileToEditor",
         "when": "editorHasFocus",
         "filters": {
@@ -59,7 +59,7 @@
         }
       },
       {
-        "title": "Send selection to Script Editor",
+        "title": "Send selection to Script Editor…",
         "command": "selectionToEditor",
         "when": "editorHasSelection && !editorHasMultipleSelections",
         "filters": {

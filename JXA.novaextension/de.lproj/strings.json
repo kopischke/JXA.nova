@@ -7,8 +7,8 @@
   "On Change": "Bei jeder Änderung",
   "On Save": "Beim Sichern",
 
-  "Open file in Script Editor": "Datei im Skript-Editor öffnen",
-  "Send selection to Script Editor": "Auswahl an Skript-Editor senden",
+  "Open file in Script Editor…": "Datei im Skript-Editor öffnen …",
+  "Send selection to Script Editor…": "Auswahl an Skript-Editor senden …",
 
   "Compile JXA Script": "JXA-Skript kompilieren",
   "Compiles the current JavaScript for Automation (JXA) source file to a binary JXA script.": "Kompiliert die aktuelle JXA-Quelltextdatei zu einem binären JXA-Skript.",
