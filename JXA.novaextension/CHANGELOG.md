@@ -1,3 +1,7 @@
+## Version 1.0.3
+
+Hotfix release: correct links to repository and issue tracker.
+
 ## Version 1.0.2
 
 Fixes:

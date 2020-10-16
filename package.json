@@ -1,6 +1,6 @@
 {
   "name": "jxa.nova",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "JavaScript for Automation (JXA) support in Nova.",
   "main": "JXA.novaextension/Scripts/main.js",
   "dependencies": {},
