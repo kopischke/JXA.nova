@@ -1,31 +1,36 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # JXA script runner. Runs either the contents of $JXARUN_CODE, or the JXA source file passed
-# as first argument with `osascript`. Except for the file ($1), all parameters are passed as
-# environment variables to avoid unwanted side effects when the file argument is missing:
-# - JXARUN_CODE - script code to run.
+# as first argument with `osascript` (pass '-' as the first argument to run from stdin).
+# Except for the file ($1), all parameters are passed as environment variables to avoid
+# unwanted side effects when the file argument is missing:
+# - JXARUN_SELECTED - whether to run the selection passed.
+# - JXARUN_CODE - script code selection to run.
 # - JXARUN_READABLE - whether output should be in human-readable form (see `man osascript)`.
 abort_prefix="Aborting:"
 
 # Construct the command line.
 jxacmd="/usr/bin/osascript -l JavaScript"
-if [ "$JXARUN_READABLE" = "false" ]; then
+if [[ "$JXARUN_READABLE" == "false" ]]; then
   jxacmd="$jxacmd -s s"
 fi
 
-# Use stdin if requested or necessary (i.e. because we run a selection).
-if [ "$1" = "-" -o "$JXARUN_SELECTED" = "true" ]; then
-  if [ "-$JXARUN_CODE" != "-" ]; then
-    echo "$JXARUN_CODE" | $jxacmd -
+# Pass selected script code, if requested, via stdin.
+# This is why we use `bash`, as `echo -E` is not POSIX.
+if [[ -n "$1" && "$1" != "-" && "$JXARUN_SELECTED" == "true" ]]; then
+  if [[ -n "$JXARUN_CODE" ]]; then
+    echo -E "$JXARUN_CODE" | $jxacmd -
     exit $?
-  elif [ "$1" = "-" ]; then
-    echo "$abort_prefix no JXA input to run." >&2
+  else
+    echo "$abort_prefix no JXA selection to run." >&2
     exit 1
   fi
 fi
 
-# Otherwise check for a file.
-if [ "-$1" = "-" ]; then
+# Otherwise check for a file (or the stdin code '-').
+# We do this last as it is possible to run code selected in a scratch file
+# via $JXARUN_SELECTED and $JXARUN_CODE.
+if [[ -z "$1" ]]; then
   echo "$abort_prefix no JXA file to run." >&2
   exit 1
 fi
