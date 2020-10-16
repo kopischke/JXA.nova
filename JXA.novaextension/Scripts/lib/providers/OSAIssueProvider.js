@@ -1,37 +1,32 @@
 /**
- * @file Diagnostics / linting functionality.
+ * @file Diagnostics / linting functionality using `osacompile`.
  */
-const { binDir } = require('./extension')
+const { IssueProvider } = require('./IssueProvider')
+const { binDir } = require('../extension')
 
-class JXAValidator {
+class OSAIssueProvider extends IssueProvider {
   /**
-   * Issue validator for the JXA syntax in Nova.
+   * OSA compiler based issue provider for the JXA syntax.
    * Uses the extension provided `jxabuild` script, which in turn uses `osacompile`
    * under the hood; not _that_ useful, but still better than no validation at all.
-   * @class JXAValidator
-   * @param {string} event - one of 'onChange' or 'onSave'
-   * @property {Function} provideIssues - the `provideIssues` function; see
-   * {@link https://docs.nova.app/api-reference/assistants-registry/#registerissueassistant-selector-object-options}..
-   * @property {string} issueMatcher - the `issueMatchers` key in `extension.json` to use.
-   * @property {string} buildDir - the Location of build output files (`osacompile` cannot
-   * compile a script without generating output somewhere).
-   * @throws {RangeError} When created with an invalid `event` argument value.`
+   * @augments IssueProvider
+   * @param {string} event - see {@link IssueProvider}
    */
   constructor (event) {
+    super(event)
     switch (event) {
       case 'onChange':
-        this.provideIssues = JXAValidator.provideIssuesSTDIN
+        this.provideIssues = OSAIssueProvider.provideIssuesSTDIN
         break
       case 'onSave':
-        this.provideIssues = JXAValidator.provideIssuesFile
+        this.provideIssues = OSAIssueProvider.provideIssuesFile
         break
-      default:
-        throw new RangeError('JXAValidator “event” argument must be “onChange” or “onSave”')
     }
 
     this.issueMatcher = 'jxa-linter-osacompile'
 
-    this.buildDir = nova.path.join(nova.extension.workspaceStoragePath, 'jxabuild')
+    this.binName = 'jxabuild'
+    this.buildDir = nova.path.join(nova.extension.workspaceStoragePath, this.binName)
     const dirStat = nova.fs.stat(this.buildDir)
     if (dirStat != null) {
       console.assert(
@@ -42,17 +37,26 @@ class JXAValidator {
   }
 
   /**
-   * Support for the `Disposable` interface. Removes the `buildDir` directory.
-   * @see {@link https://docs.nova.app/api-reference/disposable/}
-   * @memberof JXAValidator
+   * @inheritdoc
    */
-  dispose () { nova.fs.rmdir(this.buildDir) }
+  dispose () {
+    nova.fs.rmdir(this.buildDir)
+    super.dispose()
+  }
+
+  /**
+   * @inheritdoc
+   */
+  static available (workspace) {
+    const jxabuild = nova.path.join(binDir, this.binName)
+    return nova.fs.access(jxabuild, nova.fs.X_OK)
+  }
 
   /**
    * Get a build process configured and ready.
    * @param {string} forSource - Either the file to compile, or '-' for stdin.
    * @returns {Process} A Nova API process encapsulating the build.
-   * @memberof JXAValidator
+   * @memberof OSAIssueProvider
    */
   getProcess (forSource) {
     const args = {
@@ -60,23 +64,14 @@ class JXAValidator {
       env: { JXABUILD_DIR: this.buildDir, JXABUILD_FORMAT: 'scpt' },
       shell: false
     }
-    return new Process(nova.path.join(binDir, 'jxabuild'), args)
+    return new Process(nova.path.join(binDir, this.binName), args)
   }
-
-  /**
-   * Common error message prefix for getters (for DRY’s sake).
-   * @type {string} errPrefix
-   * @memberof JXAValidator
-   * @static
-   */
-  static get errPrefix () { return 'Could not get issues from `osacompile`' }
 
   /**
    * Get issues from building form stdin input. Used to do checking on changes.
    * @function provideIssuesSTDIN
    * @returns {Promise} Asynchronous issues collection.
    * @param {object} editor - The editor instance the validator is called from.
-   * @memberof JXAValidator
    * @static
    */
   static provideIssuesSTDIN (editor) {
@@ -95,8 +90,7 @@ class JXAValidator {
         writer.write(string)
         writer.close()
       } catch (err) {
-        const msg = `${JXAValidator.errPrefix}: ${err.message}`
-        console.error(msg)
+        const msg = IssueProvider.processError(err.message, this.binName)
         reject(msg)
       }
     })
@@ -107,7 +101,6 @@ class JXAValidator {
    * @function provideIssuesFile
    * @returns {Promise} Asynchronous issues collection.
    * @param {object} editor - The editor instance the validator is called from.
-   * @memberof JXAValidator
    * @static
    */
   static provideIssuesFile (editor) {
@@ -121,12 +114,11 @@ class JXAValidator {
         jxabuild.onDidExit(code => resolve(parser.issues))
         jxabuild.start()
       } catch (err) {
-        const msg = `${JXAValidator.errPrefix}: ${err.message}`
-        console.error(msg)
+        const msg = IssueProvider.processError(err.message, this.binName)
         reject(msg)
       }
     })
   }
 }
 
-module.exports = { JXAValidator: JXAValidator }
+module.exports = { OSAIssueProvider: OSAIssueProvider }

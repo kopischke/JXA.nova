@@ -30,6 +30,16 @@
         "severity": "error"
       },
       "linesStartAt1": false
+    },
+    "jxa-linter-eslint-compact": {
+      "pattern": {
+        "regexp": "\\bline (\\d+), col (\\d+), (\\w+) - (.+?)( \\((.+?)\\))?$",
+        "message": 4,
+        "code": 6,
+        "line": 1,
+        "column": 2,
+        "severity": 3
+      }
     }
   },
 

@@ -1,6 +1,25 @@
-const { JXAValidator } = require('./lib/JXAValidator')
+const { ESLintIssueProvider } = require('./lib/providers/ESLintIssueProvider')
+const { OSAIssueProvider } = require('./lib/providers/OSAIssueProvider')
 const { jxaToEditor } = require('./lib/commands')
 const { binDir } = require('./lib/extension')
+
+/**
+ * The syntax for which to register the validator.
+ * @constant {string} syntax
+ */
+const syntax = 'javascript+jxa'
+
+/**
+ * Keys to the plugin’s configuration options.
+ * @property {string} validate - The configuration for the validation mode.
+ */
+const config = { validate: 'jxa.validation.mode' }
+
+/**
+ * Extension global state
+ * @property {Disposable} [assistant] - The registered `IssueAssistant`.
+ */
+const state = { issueAssistant: null }
 
 /**
  * Ensure included binaries are executable.
@@ -24,29 +43,11 @@ exports.activate = function () {
 }
 
 /**
- * The syntax for which to register the validator.
- * @constant {string} syntax
- */
-const syntax = 'javascript+jxa'
-
-/**
- * Keys to the plugin’s configuration options.
- * @property {string} validate - The configuration for the validation mode.
- */
-const config = { validate: 'jxa.validation.mode' }
-
-/**
- * Extension global state
- * @property {Disposable} [assistant] - The registered `IssueAssistant`.
- */
-const state = { issueAssistant: null }
-
-/**
- * Register a `JXAValidator` instance with Nova’s AssistantRegistry.
+ * Register a `OSAIssueProvider` instance with Nova’s AssistantRegistry.
  * @see {@link https://docs.nova.app/api-reference/assistants-registry/}
  * @function registerAssistant
  * @returns {?Disposable} The registered `IssueAssistant`.
- * @param {string} [mode] - Mode, as described in {@link JXAValidator}.
+ * @param {string} [mode] - Mode, as described in {@link OSAIssueProvider}.
  */
 function registerAssistant (mode) {
   let assistant = state.issueAssistant
@@ -56,9 +57,16 @@ function registerAssistant (mode) {
   }
 
   if (assistant == null && mode != null) {
-    const validator = new JXAValidator(mode)
-    const options = { event: mode }
-    assistant = nova.assistants.registerIssueAssistant(syntax, validator, options)
+    let validator
+    if (ESLintIssueProvider.available(nova.workspace)) {
+      validator = new ESLintIssueProvider(mode)
+    } else if (OSAIssueProvider.available(nova.workspace)) {
+      validator = new OSAIssueProvider(mode)
+    }
+    if (validator != null) {
+      const options = { event: mode }
+      assistant = nova.assistants.registerIssueAssistant(syntax, validator, options)
+    }
   }
 
   return assistant
