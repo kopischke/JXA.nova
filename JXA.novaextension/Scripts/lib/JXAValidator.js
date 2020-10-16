@@ -28,9 +28,17 @@ class JXAValidator {
       default:
         throw new RangeError('JXAValidator “event” argument must be “onChange” or “onSave”')
     }
+
     this.issueMatcher = 'jxa-linter-osacompile'
+
     this.buildDir = nova.path.join(nova.extension.workspaceStoragePath, 'jxabuild')
-    if (!nova.fs.access(this.buildDir, nova.fs.F_OK)) nova.fs.mkdir(this.buildDir)
+    const dirStat = nova.fs.stat(this.buildDir)
+    if (dirStat != null) {
+      console.assert(
+        dirStat.isDirectory() && nova.fs.access(this.buildDir, nova.fs.W_OK),
+        `Temporary validation path exists, but isn’t a writable directory: ${this.buildDir}`
+      )
+    }
   }
 
   /**
