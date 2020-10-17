@@ -14,7 +14,11 @@ const syntax = 'javascript+jxa'
  * Extension global state
  * @property {object} [assistant] - The registered `IssueAssistant`.
  */
-const state = { issueAssistant: null }
+const state = {
+  issueAssistant: null,
+  listeners: new CompositeDisposable(),
+  commands: new CompositeDisposable()
+}
 
 /**
  * Ensure included binaries are executable.
@@ -35,6 +39,19 @@ exports.activate = function () {
     chmod.onDidExit(code => { if (code > 0) console.error(stderr.join('')) })
     chmod.start()
   }
+}
+
+/**
+ * Unregister all Disposable items in the extension state.
+ * By rights, Nova should do that by itself as part of the extension life cycle,
+ * but that seems to not (always) be the case.
+ * @function deactivate
+ */
+exports.deactivate = function () {
+  Object.keys(state).forEach(key => {
+    const item = state[key]
+    if (item != null && Disposable.isDisposable(item)) item.dispose()
+  })
 }
 
 /**
@@ -67,27 +84,31 @@ function registerAssistant (mode) {
   return assistant
 }
 
+// Register IssueAssistant (linting) functionality.
 state.issueAssistant = registerAssistant(getLocalConfig('jxa.linting.mode'))
 
-nova.config.onDidChange('jxa.linting.mode', (newValue, oldValue) => {
-  if (newValue !== oldValue) {
-    const useValue = getLocalConfig('jxa.linting.mode')
-    state.issueAssistant = registerAssistant(useValue)
+// Ensure config changes are reflected in IssueAssistant functionality.
+const assistantConfigKeys = ['jxa.linting.mode']
+assistantConfigKeys.forEach(key => {
+  const updater = (newValue, oldValue) => {
+    if (newValue !== oldValue) {
+      state.issueAssistant = registerAssistant(getLocalConfig(key))
+    }
   }
+  state.listeners.add(nova.config.onDidChange(key, updater))
+  state.listeners.add(nova.workspace.config.onDidChange(key, updater))
 })
 
-nova.workspace.config.onDidChange('jxa.linting.mode', (newValue, oldValue) => {
-  if (newValue !== oldValue) {
-    const useValue = getLocalConfig('jxa.linting.mode')
-    state.issueAssistant = registerAssistant(useValue)
-  }
-})
+// Register Commands.
+state.commands.add(
+  nova.commands.register('fileToEditor', (editor) => {
+    const range = new Range(0, editor.document.length)
+    jxaToEditor(editor.getTextInRange(range))
+  })
+)
 
-nova.commands.register('fileToEditor', (editor) => {
-  const range = new Range(0, editor.document.length)
-  jxaToEditor(editor.getTextInRange(range))
-})
-
-nova.commands.register('selectionToEditor', (editor) => {
-  jxaToEditor(editor.selectedText)
-})
+state.commands.add(
+  nova.commands.register('selectionToEditor', (editor) => {
+    jxaToEditor(editor.selectedText)
+  })
+)
