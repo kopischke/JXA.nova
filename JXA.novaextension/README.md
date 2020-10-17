@@ -16,7 +16,7 @@ Make Nova your editor of choice when developing [_JavaScript for Automation_ (JX
 
 This extension does not try to provide a full-fledged _ESLint_ experience. In fact, there would be no _ESLInt_ functionality at all if [the relevant extension](nova://extension/?id=apexskier.eslint) worked for JXA files. As such, installing and configuring _ESLint_ for your project is entirely up to you: the extension simply picks up what is configured anyway.
 
-If you’d rather not go through the motions of doing that for your JXA project, the extension will fall back on `osacompile` for linting: be aware that this is bare bones at best, as it  will only report parsing errors (the first parse. If you need to check your coding style, configure _ESLint_ to work with your JXA files (my [shareable JXA ESLint config](https://www.npmjs.com/package/eslint-config-jxa) might help).
+If you’d rather not go through the motions of doing that for your JXA project, the extension will fall back on `osacompile` for linting: be aware that this is bare bones at best, as it  will only report parsing errors (the first parsing error only, to be precise). If you need to check your coding style, configure _ESLint_ to work with your JXA files (my [shareable JXA ESLint config](https://www.npmjs.com/package/eslint-config-jxa) might help).
 
 ### Screenshots
 
