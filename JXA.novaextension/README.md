@@ -34,9 +34,14 @@ Build task settings:
 
 ## Caveats
 
-As of version 1.1, there are a few limitations to this extension you should be aware of:
+As of version 1.1 and Nova 1.2, there is a limitation to this extension you should be aware of:
 
-- The JXA syntax is declared as a sub-syntax of JavaScript, and Nova does the right thing and activates extensions claiming to process JavaScript on JXA files. Some of these extensions’ functionality, however, will fail to work with JXA files. Notable examples are [_ESLint_](nova://extension/?id=apexskier.eslint) and the [_TypeScript Language Server_](nova://extension/?id=apexskier.typescript). Workaround:
+- The JXA syntax is declared as a sub-syntax of JavaScript; Nova does the right thing and activates extensions claiming to process JavaScript on JXA files. Some of these extensions’ functionality, however, will fail to work with JXA files. Notable examples are [_ESLint_](nova://extension/?id=apexskier.eslint) and the [_TypeScript Language Server_](nova://extension/?id=apexskier.typescript). Workaround:
     - for linting, configure _ESLint_ for your project and use JXA’s own linting support.
     - for other extensions, temporarily switch to JavaScript via Nova’s syntax picker.
+
+There are also some minor issues that might be Nova bugs, or me misunderstanding how the Nova API works (hop over to the [issues](https://github.com/kopischke/JXA.nova/issues) if you have advice on this):
+
 - Syntax highlighting of ObjC constructs seeps into nominally atomic scopes like strings and comments (no workaround ATM).
+- The first JXA document open when the extension activates sometimes registers duplicate issue parsers; the result is that entries in the linting sidebar are duplicated (no workaround ATM).
+- Syntax highlighting does not always update when the JXA syntax is applied to an already open file (be it through the syntax picker, or because the extension was installed while the file was open). Workaround: open Nova’s preferences and switch your theme to another, then back (you don’t need to close preferences for this to take effect). This will refresh syntax highlighting.
