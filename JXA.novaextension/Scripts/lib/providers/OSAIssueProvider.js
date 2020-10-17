@@ -59,12 +59,12 @@ class OSAIssueProvider extends IssueProvider {
    * @memberof OSAIssueProvider
    */
   getProcess (forSource) {
-    const args = {
+    const opts = {
       args: [forSource],
       env: { JXABUILD_DIR: this.buildDir, JXABUILD_FORMAT: 'scpt' },
       shell: false
     }
-    return new Process(nova.path.join(binDir, this.binName), args)
+    return new Process(nova.path.join(binDir, this.binName), opts)
   }
 
   /**

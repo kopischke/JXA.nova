@@ -24,9 +24,9 @@
     "jxa-linter-osacompile": {
       "pattern": {
         "regexp": "\\bon line (\\d+): (.+) \\((-?\\d+)\\)$",
+        "line": 1,
         "message": 2,
         "code": 3,
-        "line": 1,
         "severity": "error"
       },
       "linesStartAt1": false
