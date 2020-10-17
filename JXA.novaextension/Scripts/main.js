@@ -12,7 +12,7 @@ const syntax = 'javascript+jxa'
 
 /**
  * Extension global state
- * @property {Disposable} [assistant] - The registered `IssueAssistant`.
+ * @property {object} [assistant] - The registered `IssueAssistant`.
  */
 const state = { issueAssistant: null }
 
