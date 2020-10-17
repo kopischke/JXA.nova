@@ -2,6 +2,7 @@
  * @file Diagnostics / linting functionality via `eslint`.
  */
 const { IssueProvider } = require('./IssueProvider')
+const { getLocalConfig, requireJSON } = require('../utils')
 
 class ESLintIssueProvider extends IssueProvider {
   /**
@@ -20,7 +21,6 @@ class ESLintIssueProvider extends IssueProvider {
         this.provideIssues = ESLintIssueProvider.provideIssuesFile
         break
     }
-    this.issueMatcher = 'jxa-linter-eslint-compact'
     this.binName = 'eslint'
   }
 
@@ -29,7 +29,41 @@ class ESLintIssueProvider extends IssueProvider {
    * @returns {string} The path to the `eslint` executable.
    * @memberof ESLintIssueProvider
    */
-  getESLint () { return '/usr/local/bin/eslint' } // FIXME
+  get eslint () {
+    const configured = getLocalConfig('jxa.linting.eslint-binary', 'string')
+    if (configured) return [configured, [], false]
+
+    const packageFile = nova.path.join(nova.workspace.path, 'package.json')
+    const packageJSON = requireJSON(packageFile)
+    if (packageJSON) {
+      const { dependencies, devDependencies } = packageJSON
+      if (
+        (dependencies && Object.keys(dependencies).includes('eslint')) ||
+        (devDependencies && Object.keys(devDependencies).includes('eslint'))
+      ) {
+        return ['npx', ['--no-install', 'eslint'], true]
+      }
+    }
+
+    return ['eslint', [], true]
+  }
+
+  /**
+   * Set the format used to parse `eslint` output, to the provided custom formatter
+   * if available, to the standard 'compact' output otherwise.
+   */
+  setFormat () {
+    let path = nova.path.join(
+      nova.extension.path, 'Scripts', 'eslint', 'eslint-format-nova.js'
+    )
+    path = nova.path.normalize(path)
+    if (!nova.fs.access(path, nova.fs.R_OK)) {
+      this.issueMatcher = 'jxa-linter-eslint-compact'
+      this.eslintFormat = 'compact'
+    }
+    this.issueMatcher = 'jxa-linter-eslint-nova'
+    this.eslintFormat = path
+  }
 
   /**
    * @inheritdoc
@@ -39,11 +73,9 @@ class ESLintIssueProvider extends IssueProvider {
     const eslintrc = nova.fs.listdir(root).filter(name => name.startsWith('.eslintrc.'))
     if (eslintrc.length) return true
 
-    const packageJSON = nova.path.join(root, 'package.json')
-    if (nova.fs.access(packageJSON, nova.fs.R_OK)) {
-      const packageData = require(packageJSON)
-      return (packageData && packageData.eslintConfig)
-    }
+    const packageFile = nova.path.join(root, 'package.json')
+    const packageJSON = requireJSON(packageFile)
+    if (packageJSON) return packageJSON.eslintConfig != null
 
     return false
   }
@@ -56,20 +88,26 @@ class ESLintIssueProvider extends IssueProvider {
    * @static
    */
   static provideIssuesSTDIN (editor) {
-    const file = editor.document.path
+    let file = editor.document.path
     const range = new Range(0, editor.document.length)
     const string = editor.getTextInRange(range)
 
+    this.setFormat()
+
     return new Promise((resolve, reject) => {
       try {
-        const parser = new IssueParser(this.issueMatcher)
-        const args = {
-          args: ['--format=compact', '--stdin'],
-          shell: false
+        const [bin, args, shell] = this.eslint
+        const opts = {
+          args: args.concat(['--format', this.eslintFormat, '--stdin']),
+          shell: shell
         }
-        if (file != null) args.args.push('--stdin-filename', file)
-        const eslint = new Process(this.getESLint(), args)
+
+        if (file == null) file = nova.path.join(nova.workspace.path, '_.jxa')
+        opts.args.push('--stdin-filename', file)
+        const eslint = new Process(bin, opts)
         const stderr = []
+
+        const parser = new IssueParser(this.issueMatcher)
 
         eslint.onStdout(line => parser.pushLine(line))
         eslint.onStderr(line => stderr.push(line))
@@ -98,16 +136,19 @@ class ESLintIssueProvider extends IssueProvider {
    */
   static provideIssuesFile (editor) {
     const file = editor.document.path
+    this.setFormat()
 
     return new Promise((resolve, reject) => {
       try {
-        const parser = new IssueParser(this.issueMatcher)
-        const args = {
-          args: ['--format=compact', file],
-          shell: false
+        const [bin, args, shell] = this.eslint
+        const opts = {
+          args: args.concat(['--format', this.eslintFormat, file]),
+          shell: shell
         }
-        const eslint = new Process(this.getESLint(), args)
+        const eslint = new Process(bin, opts)
         const stderr = []
+
+        const parser = new IssueParser(this.issueMatcher)
 
         eslint.onStdout(line => parser.pushLine(line))
         eslint.onStderr(line => stderr.push(line))

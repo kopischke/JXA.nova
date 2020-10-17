@@ -34,12 +34,26 @@
     "jxa-linter-eslint-compact": {
       "pattern": {
         "regexp": "\\bline (\\d+), col (\\d+), (\\w+) - (.+?)( \\((.+?)\\))?$",
-        "message": 4,
-        "code": 6,
         "line": 1,
         "column": 2,
-        "severity": 3
-      }
+        "severity": 3,
+        "message": 4,
+        "code": 6
+      },
+      "linesStartAt1": false
+    },
+    "jxa-linter-eslint-nova": {
+      "pattern": {
+        "regexp": "^.+?:(\\d+):(\\d+):(\\d+):(\\d+):(\\w+):(.+?)( \\[(.+?)\\])?$",
+        "line": 1,
+        "column": 2,
+        "endLine": 3,
+        "endColumn": 4,
+        "severity": 5,
+        "message": 6,
+        "code": 8
+      },
+      "linesStartAt1": false
     }
   },
 
