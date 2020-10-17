@@ -1,12 +1,16 @@
 {
   "JavaScript for Automation (JXA) support in Nova.": "JavaScript for Automation (JXA)-Unterstützung für Nova.",
 
-  "Validation": "Validierung",
-  "Whether and when automatic validation of open JXA files should be performed.": "Modus, in dem offene JXA-Dateien validiert werden (wenn überhaupt).",
+  "Use global setting": "Globale Einstellung übernehmen",
   "Disabled": "Aus",
   "On Change": "Bei jeder Änderung",
   "On Save": "Beim Sichern",
 
+  "Linting": "Fehlerprüfung",
+  "Whether and when automatic linting of open JXA files should be performed.": "Ob und wann offene JXA-Dateien auf Fehler überprüft werden sollen.",
+  "ESLint binary path": "ESLint-Pfad",
+  "Path to the eslint binary to use when linting. If this is unset, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.": "Pfad zum ausführbaren eslint-Skript, das zur Fehlerprüfung verwendet werden soll. Wenn hier nichst eingestellt ist, wird die Erweiterung erst nach einer Projektlokalen ESLint-Installation suchen, dann nach einer globalen. Diese Einstellung wird nur benötigt, wenn eine eslint-Version benutzt werden soll, die nicht im $PATH liegt.",
+  "Path to the eslint binary to use when linting. If this is unset, the global setting is used. If that is unset too, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.": "Pfad zum ausführbaren eslint-Skript, das zur Fehlerprüfung verwendet werden soll. Wenn hier nichts eingestellt ist, gilt die globale Einstellung. Wenn dort auch nichst eingestellt ist, wird die Erweiterung erst nach einer Projektlokalen ESLint-Installation suchen, dann nach einer globalen. Diese Einstellung wird nur benötigt, wenn eine eslint-Version benutzt werden soll, die nicht im $PATH liegt.",
   "Open file in Script Editor…": "Datei im Skript-Editor öffnen …",
   "Send selection to Script Editor…": "Auswahl an Skript-Editor senden …",
 
