@@ -1,3 +1,12 @@
+## Version 1.1.0
+
+The tentpole feature of this release is _ESLint_ based linting of JXA files. This simply picks up your existing _ESLint_ configuration and falls back to `osacompile` if there isn’t any. It will hopefully alleviate the fact that the current [_ESLint_ extension](nova://extension/?id=apexskier.eslint) doesn’t work with JXA files; the JXA extension doesn’t try to provide the same level of features, though.
+
+Added:
+
+- _ESLint_ based linting of JXA files. See the README’s **A note on linting** section for details.
+- Cascading settings: extension options can now be set at the global level and at the workspace level, with the latter inheriting from, or overriding, the former.
+
 ## Version 1.0.3
 
 Hotfix release: correct links to repository and issue tracker.
