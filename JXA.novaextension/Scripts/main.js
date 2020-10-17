@@ -2,18 +2,13 @@ const { ESLintIssueProvider } = require('./lib/providers/ESLintIssueProvider')
 const { OSAIssueProvider } = require('./lib/providers/OSAIssueProvider')
 const { jxaToEditor } = require('./lib/commands')
 const { binDir } = require('./lib/extension')
+const { getLocalConfig } = require('./lib/utils')
 
 /**
  * The syntax for which to register the validator.
  * @constant {string} syntax
  */
 const syntax = 'javascript+jxa'
-
-/**
- * Keys to the plugin’s configuration options.
- * @property {string} validate - The configuration for the validation mode.
- */
-const config = { validate: 'jxa.validation.mode' }
 
 /**
  * Extension global state
@@ -56,7 +51,7 @@ function registerAssistant (mode) {
     assistant = null
   }
 
-  if (assistant == null && mode != null) {
+  if (assistant == null && mode !== 'off') {
     let validator
     if (ESLintIssueProvider.available(nova.workspace)) {
       validator = new ESLintIssueProvider(mode)
@@ -72,10 +67,20 @@ function registerAssistant (mode) {
   return assistant
 }
 
-state.issueAssistant = registerAssistant(nova.workspace.config.get(config.validate))
+state.issueAssistant = registerAssistant(getLocalConfig('jxa.linting.mode'))
 
-nova.workspace.config.onDidChange(config.validate, (newValue, oldValue) => {
-  if (newValue !== oldValue) state.issueAssistant = registerAssistant(newValue)
+nova.config.onDidChange('jxa.linting.mode', (newValue, oldValue) => {
+  if (newValue !== oldValue) {
+    const useValue = getLocalConfig('jxa.linting.mode')
+    state.issueAssistant = registerAssistant(useValue)
+  }
+})
+
+nova.workspace.config.onDidChange('jxa.linting.mode', (newValue, oldValue) => {
+  if (newValue !== oldValue) {
+    const useValue = getLocalConfig('jxa.linting.mode')
+    state.issueAssistant = registerAssistant(useValue)
+  }
 })
 
 nova.commands.register('fileToEditor', (editor) => {

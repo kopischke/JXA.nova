@@ -43,17 +43,55 @@
     }
   },
 
-  "configWorkspace": [
+  "config": [
     {
-      "key": "jxa.validation.mode",
-      "title": "Validation",
+      "key": "jxa.linting.mode",
+      "title": "Linting",
       "type": "enum",
-      "description": "Whether and when automatic validation of open JXA files should be performed.",
+      "description": "Whether and when automatic linting of open JXA files should be performed.",
       "values": [
-        [null, "Disabled"],
+        ["off", "Disabled"],
         ["onSave", "On Save"],
         ["onChange", "On Change"]
       ],
+      "default": "off"
+    },
+    {
+      "key": "jxa.linting.eslint-binary",
+      "title": "ESLint binary path",
+      "type": "path",
+      "description": "Path to the eslint binary to use when linting. If this is unset, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
+      "required": false,
+      "allowFiles": true,
+      "allowFolders": false,
+      "relative": false,
+      "default": null
+    }
+  ],
+
+  "configWorkspace": [
+    {
+      "key": "jxa.linting.mode",
+      "title": "Linting",
+      "type": "enum",
+      "description": "Whether and when automatic linting of open JXA files should be performed.",
+      "values": [
+        [null, "Use global setting"],
+        ["off", "Disabled"],
+        ["onSave", "On Save"],
+        ["onChange", "On Change"]
+      ],
+      "default": null
+    },
+    {
+      "key": "jxa.linting.eslint-binary",
+      "title": "ESLint binary path",
+      "type": "path",
+      "description": "Path to the eslint binary to use when linting. If this is unset, the global setting is used. If that is unset too, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
+      "required": false,
+      "allowFiles": true,
+      "allowFolders": false,
+      "relative": false,
       "default": null
     }
   ],
