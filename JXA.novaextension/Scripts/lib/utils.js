@@ -11,7 +11,7 @@
  */
 function getLocalConfig (key, type) {
   const local = nova.workspace.config.get(key, type)
-  return local || nova.config.get(key, type)
+  return local != null ? local : nova.config.get(key, type)
 }
 
 /**
