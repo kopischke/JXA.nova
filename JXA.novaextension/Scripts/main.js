@@ -1,11 +1,11 @@
-const { ESLintIssueProvider } = require('./lib/providers/ESLintIssueProvider')
-const { OSAIssueProvider } = require('./lib/providers/OSAIssueProvider')
+const eslint = require('./lib/linters/eslint')
+const osacompile = require('./lib/linters/osacompile')
 const { jxaToEditor } = require('./lib/commands')
 const { binDir } = require('./lib/extension')
 const { getLocalConfig } = require('./lib/utils')
 
 /**
- * The syntax for which to register the validator.
+ * The syntax for which to register the linter.
  * @constant {string} syntax
  */
 const syntax = 'javascript+jxa'
@@ -13,10 +13,11 @@ const syntax = 'javascript+jxa'
 /**
  * Extension global state
  * @property {object} [assistant] - The registered `IssueAssistant`.
+ * @property {object} [commands] - All registered `Command` handlers.
  */
 const state = {
   issueAssistant: null,
-  listeners: new CompositeDisposable(),
+  providers: new CompositeDisposable(),
   commands: new CompositeDisposable()
 }
 
@@ -55,29 +56,105 @@ exports.deactivate = function () {
 }
 
 /**
- * Register a `OSAIssueProvider` instance with Nova’s AssistantRegistry.
- * @see {@link https://docs.nova.app/api-reference/assistants-registry/}
- * @function registerAssistant
- * @returns {?Disposable} The registered `IssueAssistant`.
- * @param {string} [mode] - Mode, as described in {@link OSAIssueProvider}.
+ * An item complying with `IssueAssistant` interface.
+ * @external IssueAssistant
+ * @interface
+ * @see {@link https://docs.nova.app/api-reference/assistants-registry/#registerissueassistant-selector-object-options}}
  */
-function registerAssistant (mode) {
-  let assistant = state.issueAssistant
-  if (assistant != null) {
-    assistant.dispose()
-    assistant = null
+
+/**
+ * @interface Linter
+ */
+
+/**
+ * Checks if the Linter can be set up for a Workspace.
+ * @function canSetup
+ * @returns {boolean} Whether the the workspace can be linted.
+ * @param {object} workspace - The Workspace to check.
+ */
+
+/**
+ * Checks if the Linter can lint a TextEditor’s content.
+ * @function canLint
+ * @returns {boolean} Whether the contents of the editor can be linted.
+ * @param {object} editor - The TextEditor to check.
+ */
+
+/**
+ * Check for issues on editor content changes.
+ * @function onChange
+ * @returns {Promise} A Promise, as specified by the IssueAssistant interface.
+ * @param {object} editor - The TextEditor to check.
+ */
+
+/**
+ * Check for issues on file save.
+ * @function onSave
+ * @returns {Promise} A Promise, as specified by the IssueAssistant interface.
+ * @param {object} editor - The TextEditor to check.
+ */
+
+/**
+ * The available linting providers.
+ */
+const providers = [eslint, osacompile]
+providers.forEach(item => {
+  if (Disposable.isDisposable(item)) state.providers.add(item)
+})
+
+/**
+ * Register an IssueAssistant instance with Nova’s AssistantRegistry.
+ * This will forward the `provideIssues` request to the first linter
+ * from an ordered list that responds true to both `canSetup()` and
+ * request and a `canLint(editor)` request. Linters need to provide
+ * both an `onChange` and an `onSave` function besides the above.
+ * As a side effect, it will set `state.issueAssistant` correctly.
+ * @function registerAssistant
+ * @returns {Disposable} The registered handler.
+ */
+function registerAssistant () {
+  if (state.issueAssistant != null) {
+    state.issueAssistant.dispose()
+    state.issueAssistant = null
   }
 
+  let assistant = state.issueAssistant
+  const mode = getLocalConfig('jxa.linting.mode')
   if (assistant == null && mode !== 'off') {
-    let validator
-    if (ESLintIssueProvider.available(nova.workspace)) {
-      validator = new ESLintIssueProvider(mode)
-    } else if (OSAIssueProvider.available(nova.workspace)) {
-      validator = new OSAIssueProvider(mode)
+    const available = providers.filter(item => item.canSetup(nova.workspace))
+
+    let provider = null
+    if (available.length) {
+      /**
+       * The issue request handling function. This dynamically dispatches
+       * the request to the best available linter (see above), and returns
+       * an information pseudo-Issue if no linter is available.
+       * @implements {external:IssueAssistant}
+       */
+      provider = {
+        provideIssues: function (editor) {
+          const linter = available.find(item => item.canLint(editor))
+          if (linter != null) return linter[mode](editor)
+          return new Promise((resolve, reject) => {
+            if (!nova.config.get('jxa.linting.hide-info')) {
+              const issue = new Issue()
+              issue.source = nova.extension.name
+              issue.message = 'Linting not available.'
+              issue.line = 0
+              issue.column = 0
+              issue.severity = IssueSeverity.Info
+              resolve([issue])
+            } else {
+              resolve([])
+            }
+          })
+        }
+      }
     }
-    if (validator != null) {
+
+    if (provider != null) {
       const options = { event: mode }
-      assistant = nova.assistants.registerIssueAssistant(syntax, validator, options)
+      assistant = nova.assistants.registerIssueAssistant(syntax, provider, options)
     }
   }
 
@@ -85,19 +162,7 @@ function registerAssistant (mode) {
 }
 
 // Register IssueAssistant (linting) functionality.
-state.issueAssistant = registerAssistant(getLocalConfig('jxa.linting.mode'))
-
-// Ensure config changes are reflected in IssueAssistant functionality.
-const assistantConfigKeys = ['jxa.linting.mode']
-assistantConfigKeys.forEach(key => {
-  const updater = (newValue, oldValue) => {
-    if (newValue !== oldValue) {
-      state.issueAssistant = registerAssistant(getLocalConfig(key))
-    }
-  }
-  state.listeners.add(nova.config.onDidChange(key, updater))
-  state.listeners.add(nova.workspace.config.onDidChange(key, updater))
-})
+state.issueAssistant = registerAssistant()
 
 // Register Commands.
 state.commands.add(

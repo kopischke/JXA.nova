@@ -25,4 +25,23 @@ function requireJSON (path) {
   return lines.length > 0 ? JSON.parse(lines.join('\n')) : null
 }
 
-module.exports = { getLocalConfig: getLocalConfig, requireJSON: requireJSON }
+/**
+ * Shim for the `Workspace.contains` instance method; as of Nova 1.2,
+ * that always returns true and `Workspace.relativizePath` always returns
+ * a relative path, with as many  '../' as needed.
+ * @see {@link https://docs.nova.app/api-reference/workspace/#contains-path}
+ * @see {@link https://docs.nova.app/api-reference/workspace/#relativizepath-path}
+ * @returns {boolean} Whether the path is inside the workspace’s directory hierarchy.
+ * @param {object} workspace - The workspace to check.
+ * @param {string} path - The path to object to check.
+ */
+function workspaceContains (workspace, path) {
+  const relative = workspace.relativizePath(path)
+  return relative !== path && !relative.startsWith('../')
+}
+
+module.exports = {
+  getLocalConfig: getLocalConfig,
+  requireJSON: requireJSON,
+  workspaceContains: workspaceContains
+}

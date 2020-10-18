@@ -30,30 +30,6 @@
         "severity": "error"
       },
       "linesStartAt1": false
-    },
-    "jxa-linter-eslint-compact": {
-      "pattern": {
-        "regexp": "\\bline (\\d+), col (\\d+), (\\w+) - (.+?)( \\((.+?)\\))?$",
-        "line": 1,
-        "column": 2,
-        "severity": 3,
-        "message": 4,
-        "code": 6
-      },
-      "linesStartAt1": false
-    },
-    "jxa-linter-eslint-nova": {
-      "pattern": {
-        "regexp": "^.+?:(\\d+):(\\d+):(\\d+):(\\d+):(\\w+):(.+?)( \\[(.+?)\\])?$",
-        "line": 1,
-        "column": 2,
-        "endLine": 3,
-        "endColumn": 4,
-        "severity": 5,
-        "message": 6,
-        "code": 8
-      },
-      "linesStartAt1": false
     }
   },
 
@@ -69,6 +45,13 @@
         ["onChange", "On Change"]
       ],
       "default": "off"
+    },
+    {
+      "key": "jxa.linting.hide-info",
+      "title": "Hide extra linter information.",
+      "type": "boolean",
+      "description": "Linters will add an informative entry when they find issues. The exact contents of that entry depend on the active linter (ESLint or osacompile). Check this if you only want the reported issues displayed.",
+      "default": false
     },
     {
       "key": "jxa.linting.eslint-binary",
