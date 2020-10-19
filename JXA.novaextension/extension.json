@@ -130,6 +130,7 @@
         "env": {
           "JXABUILD_DIR": "$(Config:jxa.build.directory)",
           "JXABUILD_FORMAT": "$(Config:jxa.build.format)",
+          "JXABUILD_KEEPEXT": "$(Config:jxa.build.keep-extension)",
           "JXABUILD_EXEONLY": "$(Config:jxa.build.execute-only)",
           "JXABUILD_STAYOPEN": "$(Config:jxa.build.applet.stay-open)",
           "JXABUILD_SPLASHSCREEN": "$(Config:jxa.build.applet.splash-screen)"
@@ -165,6 +166,13 @@
                 ["app", "Applet or Droplet (.app)"]
               ],
               "default": "scpt"
+            },
+            {
+              "key": "jxa.build.keep-extension",
+              "title": "Do not strip the original file extension",
+              "description": "By default, the compiled file format extension will replace the original file extension (e.g. “file.js” becomes “file.scpt”). Check this if you want it to be appended instead (e.g. “file.js” becomes “file.js.scpt”).",
+              "type": "boolean",
+              "default": false
             },
             {
               "key": "jxa.build.execute-only",

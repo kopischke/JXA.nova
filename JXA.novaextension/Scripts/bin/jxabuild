@@ -47,7 +47,7 @@ fi
 
 # Construct the command line.
 strip=""
-if [[ -n "$2" ]]; then strip=".$2"; fi
+if [[ -n "$2" && "$JXABUILD_KEEPEXT" != "true" ]]; then strip=".$2"; fi
 flags=""
 if [[ "$JXABUILD_EXEONLY" = "true" ]]; then flags="$flags -x"; fi
 if [[ "$JXABUILD_STAYOPEN" = "true" ]]; then flags="$flags -s"; fi
