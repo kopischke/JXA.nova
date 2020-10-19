@@ -1,5 +1,6 @@
 /**
  * @file Linting functionality via osacompile.
+ * @external Linter
  */
 const { binDir } = require('../extension')
 const tmpDir = nova.path.join(nova.extension.workspaceStoragePath, 'osacompile.tmp')
@@ -146,6 +147,7 @@ function onSave (editor) {
 
 /**
  * @implements {Disposable}
+ * @implements {external:Linter}
  */
 module.exports = {
   canLint: canLint,

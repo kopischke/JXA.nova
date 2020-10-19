@@ -56,7 +56,7 @@ exports.deactivate = function () {
 }
 
 /**
- * An item complying with `IssueAssistant` interface.
+ * An item complying with the IssueAssistant interface.
  * @external IssueAssistant
  * @interface
  * @see {@link https://docs.nova.app/api-reference/assistants-registry/#registerissueassistant-selector-object-options}}
@@ -104,10 +104,8 @@ providers.forEach(item => {
 
 /**
  * Register an IssueAssistant instance with Nova’s AssistantRegistry.
- * This will forward the `provideIssues` request to the first linter
- * from an ordered list that responds true to both `canSetup()` and
- * request and a `canLint(editor)` request. Linters need to provide
- * both an `onChange` and an `onSave` function besides the above.
+ * This will forward the `provideIssues` request to the first {@link Linter}
+ * from an ordered list that responds true to both `canSetup()` and `canLint()`.
  * As a side effect, it will set `state.issueAssistant` correctly.
  * @function registerAssistant
  * @returns {Disposable} The registered handler.

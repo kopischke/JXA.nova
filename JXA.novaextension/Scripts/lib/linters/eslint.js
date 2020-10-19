@@ -1,5 +1,6 @@
 /**
  * @file Linting functionality via ESLint.
+ * @external Linter
  */
 const { getLocalConfig, requireJSON, workspaceContains } = require('../utils')
 
@@ -222,6 +223,9 @@ function onSave (editor) {
   })
 }
 
+/**
+ * @implements {external:Linter}
+ */
 module.exports = {
   canLint: canLint,
   canSetup: canSetup,
