@@ -37,8 +37,8 @@
     {
       "key": "jxa.linting.mode",
       "title": "Linting",
-      "type": "enum",
       "description": "Whether and when automatic linting of open JXA files should be performed.",
+      "type": "enum",
       "values": [
         ["off", "Disabled"],
         ["onSave", "On Save"],
@@ -49,15 +49,15 @@
     {
       "key": "jxa.linting.hide-info",
       "title": "Hide extra linter information.",
-      "type": "boolean",
       "description": "Linters will add an informative entry when they find issues. The exact contents of that entry depend on the active linter (ESLint or osacompile). Check this if you only want the reported issues displayed.",
+      "type": "boolean",
       "default": false
     },
     {
       "key": "jxa.linting.eslint-binary",
       "title": "eslint binary path",
-      "type": "path",
       "description": "Path to the eslint binary to use when linting. If this is unset, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
+      "type": "path",
       "required": false,
       "allowFiles": true,
       "allowFolders": false,
@@ -70,8 +70,8 @@
     {
       "key": "jxa.linting.mode",
       "title": "Linting",
-      "type": "enum",
       "description": "Whether and when automatic linting of open JXA files should be performed.",
+      "type": "enum",
       "values": [
         [null, "Use global setting"],
         ["off", "Disabled"],
@@ -83,8 +83,8 @@
     {
       "key": "jxa.linting.eslint-binary",
       "title": "eslint binary path",
-      "type": "path",
       "description": "Path to the eslint binary to use when linting. If this is unset, the global setting is used. If that is unset too, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
+      "type": "path",
       "required": false,
       "allowFiles": true,
       "allowFolders": false,
