@@ -28,7 +28,7 @@ Linting with _ESLint_:
 
 ![JXA.nova linting feature](https://raw.githubusercontent.com/kopischke/JXA.nova/main/img/jxa-linting-feature.png "Linting with ESLint.")
 
-Build task settings:
+Build task settings (showcasing German localisation):
 
 ![JXA,nova build task settings](https://raw.githubusercontent.com/kopischke/JXA.nova/main/img/jxa-task-build-settings.png "Build task settings.")
 
