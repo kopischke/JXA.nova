@@ -22,7 +22,7 @@ function canSetup (_) {
     return false
   }
 
-  const bin = nova.path.join(binDir, binary)
+  const bin = nova.path.join(binDir(), binary)
   if (!nova.fs.access(bin, nova.fs.X_OK)) {
     logError(`script wrapper '${binary}' is not an executable file.`)
     return false
@@ -58,7 +58,7 @@ function getProcess (forSource) {
     env: { JXABUILD_DIR: tmpDir, JXABUILD_FORMAT: 'scpt' },
     shell: false
   }
-  return new Process(nova.path.join(binDir, binary), opts)
+  return new Process(nova.path.join(binDir(), binary), opts)
 }
 
 /**

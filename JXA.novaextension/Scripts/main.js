@@ -1,6 +1,6 @@
 const eslint = require('./lib/linters/eslint')
 const osacompile = require('./lib/linters/osacompile')
-const { jxaToEditor } = require('./lib/commands')
+const { toScriptEditor } = require('./lib/commands')
 const { binDir } = require('./lib/extension')
 const { getLocalConfig } = require('./lib/utils')
 
@@ -26,8 +26,9 @@ const state = {
  * @function activate
  */
 exports.activate = function () {
-  const binaries = nova.fs.listdir(binDir)
-    .map(name => nova.path.join(binDir, name))
+  const location = binDir()
+  const binaries = nova.fs.listdir(location)
+    .map(name => nova.path.join(location, name))
     .filter(path => {
       return nova.fs.stat(path).isFile() && !nova.fs.access(path, nova.fs.X_OK)
     })
@@ -166,12 +167,12 @@ state.issueAssistant = registerAssistant()
 state.commands.add(
   nova.commands.register('fileToEditor', (editor) => {
     const range = new Range(0, editor.document.length)
-    jxaToEditor(editor.getTextInRange(range))
+    toScriptEditor(editor.getTextInRange(range))
   })
 )
 
 state.commands.add(
   nova.commands.register('selectionToEditor', (editor) => {
-    jxaToEditor(editor.selectedText)
+    toScriptEditor(editor.selectedText)
   })
 )

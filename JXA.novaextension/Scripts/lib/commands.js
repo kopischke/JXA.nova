@@ -7,7 +7,7 @@ const { binDir } = require('./extension')
  * Send the JXA code of the current editor to macOS’ Script Editor.
  * @param {string} source - The JXA source to send to Script Editor.
  */
-function jxaToEditor (source) {
+exports.toScriptEditor = function (source) {
   // We have to do a little dance to get all code properly into Script Editor:
   // - using a raw template string ensures Script Editor leaves literal '\n' and such alone;
   // - the `escaped` step makes sure the source does not break out of the template string;
@@ -21,7 +21,7 @@ function jxaToEditor (source) {
     'doc.checkSyntax()'
   ]
 
-  const runner = new Process(nova.path.join(binDir, 'jxarun'), { args: ['-'] })
+  const runner = new Process(nova.path.join(binDir(), 'jxarun'), { args: ['-'] })
   const stderr = []
   runner.onStderr(line => stderr.push(line))
   runner.onDidExit(code => { if (code > 0) console.error(stderr.join('')) })
@@ -31,5 +31,3 @@ function jxaToEditor (source) {
   writer.write(script.join('\n'))
   writer.close()
 }
-
-module.exports = { jxaToEditor: jxaToEditor }
