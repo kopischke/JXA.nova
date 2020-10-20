@@ -6,7 +6,6 @@ const { getLocalConfig } = require('./lib/utils')
 
 /**
  * The syntax for which to register the linter.
- * @constant {string} syntax
  */
 const syntax = 'javascript+jxa'
 
