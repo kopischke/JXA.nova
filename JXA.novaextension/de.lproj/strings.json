@@ -15,6 +15,7 @@
   "Path to the eslint binary to use when linting. If this is unset, the global setting is used. If that is unset too, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.": "Pfad zum ausführbaren eslint-Skript, das zur Fehlerprüfung verwendet werden soll. Wenn hier nichts eingestellt ist, gilt die globale Einstellung. Wenn dort auch nichst eingestellt ist, wird die Erweiterung erst nach einer Projektlokalen ESLint-Installation suchen, dann nach einer globalen. Diese Einstellung wird nur benötigt, wenn eine eslint-Version benutzt werden soll, die nicht im $PATH liegt.",
   "Open file in Script Editor…": "Datei im Skript-Editor öffnen …",
   "Send selection to Script Editor…": "Auswahl an Skript-Editor senden …",
+  "JXA Workspace preferences…": "JXA-Projekteinstellungen …",
 
   "Compile JXA Script": "JXA-Skript kompilieren",
   "Compiles the current JavaScript for Automation (JXA) source file to a binary JXA script.": "Kompiliert die aktuelle JXA-Quelltextdatei zu einem binären JXA-Skript.",

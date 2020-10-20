@@ -111,6 +111,12 @@
           "syntaxes": ["javascript+jxa"]
         }
       }
+    ],
+    "extensions": [
+      {
+        "title": "JXA Workspace preferences…",
+        "command": "workspaceConfig"
+      }
     ]
   },
 

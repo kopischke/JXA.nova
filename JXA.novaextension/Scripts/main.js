@@ -187,6 +187,10 @@ function registerCommands () {
   nova.commands.register('selectionToEditor', (editor) => {
     toScriptEditor(editor.selectedText)
   })
+
+  nova.commands.register('workspaceConfig', (_) => {
+    nova.workspace.openConfig()
+  })
 }
 
 /**
