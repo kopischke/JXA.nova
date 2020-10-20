@@ -19,7 +19,7 @@ Fixed:
 
 Other changes:
 
-- _ESLint_ linting now directly parses the JSON output. The custom formatter has been removed. As it turns out, that is what all ESlint CLI formatters actually do, so we might as well cut out the middle person.
+- _ESLint_ linting now directly parses the JSON output. The custom formatter has been removed. As it turns out, that is what all ESLint CLI formatters actually do, so we might as well cut out the middle person.
 
 ## Version 1.1.0 and 1.1.1
 
