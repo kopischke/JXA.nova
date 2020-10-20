@@ -43,5 +43,4 @@ As of version 1.1 and Nova 1.2, there is a limitation to this extension you shou
 There are also some minor issues that might be Nova bugs, or me misunderstanding how the Nova API works (hop over to the [issues](https://github.com/kopischke/JXA.nova/issues) if you have advice on this):
 
 - Syntax highlighting of ObjC constructs seeps into nominally atomic scopes like strings and comments (no workaround ATM).
-- The first JXA document open when the extension activates sometimes has duplicate entries in the linting sidebar (no workaround ATM).
 - Syntax highlighting does not always update when the JXA syntax is applied to an already open file (be it through the syntax picker, or because the extension was installed while the file was open). Workaround: open Nova’s preferences and switch your theme to another, then back (you don’t need to close preferences for this to take effect). This will refresh syntax highlighting.
