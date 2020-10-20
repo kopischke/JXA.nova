@@ -1,6 +1,7 @@
 /**
  * @file Linting functionality via ESLint.
  * @external Linter
+ * @implements {external:Linter}
  */
 const { getLocalConfig, requireJSON, workspaceContains } = require('../utils')
 
@@ -10,7 +11,7 @@ const { getLocalConfig, requireJSON, workspaceContains } = require('../utils')
  * @returns {boolean} Whether the linter can process the document.
  * @param {object} _ - The Workspace the linter is to be set up for (ignored).
  */
-function canSetup (_) { return true }
+exports.canSetup = function (_) { return true }
 
 /**
  * Check if the linter can process an editor’s document. This is true when:
@@ -19,7 +20,7 @@ function canSetup (_) { return true }
  * @returns {boolean} Whether the linter can process the document.
  * @param {object} editor - The TextEditor the linter is called on.
  */
-function canLint (editor) {
+exports.canLint = function (editor) {
   const file = editor.document.path
   if (file == null || workspaceContains(nova.workspace, file)) {
     const root = nova.workspace.path
@@ -128,14 +129,33 @@ function issuesInfo (eslintJSON) {
 }
 
 /**
- * Create a standard error message and log it to console.
- * @returns {string} The logged error message.
- * @param {string} message - The input error message to process.
+ * Check if the linter can be set up  in a workspace This is always true,
+ * as ESLint installation and configuration can happen anytime.
+ * @returns {boolean} Whether the linter can process the document.
+ * @param {object} _ - The Workspace the linter is to be set up for (ignored).
  */
-function logError (message) {
-  const msg = `Could not get issues from 'ESLint': ${message}`
-  console.error(msg)
-  return msg
+exports.canSetup = function (_) { return true }
+
+/**
+ * Check if the linter can process an editor’s document. This is true when:
+ * - the document is part of the workspace, and
+ * - the workspace contains ESLint configuration data.
+ * @returns {boolean} Whether the linter can process the document.
+ * @param {object} editor - The TextEditor the linter is called on.
+ */
+exports.canLint = function (editor) {
+  const file = editor.document.path
+  if (file == null || workspaceContains(nova.workspace, file)) {
+    const root = nova.workspace.path
+    const eslintrc = nova.fs.listdir(root).filter(name => name.startsWith('.eslintrc.'))
+    if (eslintrc.length) return true
+
+    const packageFile = nova.path.join(root, 'package.json')
+    const packageJSON = requireJSON(packageFile)
+    if (packageJSON) return packageJSON.eslintConfig != null
+  }
+
+  return false
 }
 
 /**
@@ -143,7 +163,7 @@ function logError (message) {
  * @returns {Promise} Asynchronous issues collection.
  * @param {object} editor - The TextEditor the linter is called on.
  */
-function onChange (editor) {
+exports.onChange = function (editor) {
   let file = editor.document.path
   const range = new Range(0, editor.document.length)
   const string = editor.getTextInRange(range)
@@ -156,7 +176,13 @@ function onChange (editor) {
         shell: shell
       }
 
-      if (file == null) file = nova.path.join(nova.workspace.path, '_.jxa')
+      if (file == null) {
+        file = nova.path.join(
+          nova.workspace.path,
+          editor.document.uri.replace('unsaved://', '')
+        )
+      }
+
       opts.args.push('--stdin-filename', file)
       const linter = new Process(bin, opts)
       const stdout = []
@@ -164,8 +190,10 @@ function onChange (editor) {
 
       linter.onStdout(line => stdout.push(line))
       linter.onStderr(line => stderr.push(line))
-      linter.onDidExit(_ => {
-        if (stderr.length) logError(stderr.join(''))
+      linter.onDidExit(code => {
+        if (code > 1) reject(stderr.length ? stderr.join('') : 'Unexpected ESLint failure')
+        if (stderr.length) console.warn(stderr.join(''))
+
         const results = stdout.join('')
         let issues = parseIssues(results)
         if (issues.length && !nova.config.get('jxa.linting.hide-info')) {
@@ -179,7 +207,7 @@ function onChange (editor) {
       writer.write(string)
       writer.close()
     } catch (error) {
-      reject(logError(error.message))
+      reject(error.message)
     }
   })
 }
@@ -190,9 +218,8 @@ function onChange (editor) {
  * @param {object} editor - The TextEditor the linter is called on.
  * @static
  */
-function onSave (editor) {
+exports.onSave = function (editor) {
   const file = editor.document.path
-  this.setFormat()
 
   return new Promise((resolve, reject) => {
     try {
@@ -207,8 +234,10 @@ function onSave (editor) {
 
       linter.onStdout(line => stdout.push(line))
       linter.onStderr(line => stderr.push(line))
-      linter.onDidExit(_ => {
-        if (stderr.length) logError(stderr.join(''))
+      linter.onDidExit(code => {
+        if (code > 1) reject(stderr.length ? stderr.join('') : 'Unexpected ESLint failure')
+        if (stderr.length) console.warn(stderr.join(''))
+
         const results = stdout.join('')
         let issues = parseIssues(results)
         if (issues.length && !nova.config.get('jxa.linting.hide-info')) {
@@ -218,17 +247,7 @@ function onSave (editor) {
       })
       linter.start()
     } catch (error) {
-      reject(logError(error.message))
+      reject(error.message)
     }
   })
-}
-
-/**
- * @implements {external:Linter}
- */
-module.exports = {
-  canLint: canLint,
-  canSetup: canSetup,
-  onChange: onChange,
-  onSave: onSave
 }

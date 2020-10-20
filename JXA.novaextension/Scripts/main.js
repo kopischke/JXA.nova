@@ -12,23 +12,31 @@ const syntax = 'javascript+jxa'
 
 /**
  * Extension global state
- * @property {object} [assistant] - The registered `IssueAssistant`.
- * @property {object} [commands] - All registered `Command` handlers.
+ * @property {Disposable} [issueAssistant] - The registered IssueAssistant.
+ * @property {string} [issueMode] - The activation mode for the registered IssueAssistant.
  */
-const state = {
-  issueAssistant: null,
-  providers: new CompositeDisposable(),
-  commands: new CompositeDisposable()
-}
+const state = { issueAssistant: null, issueMode: null }
+
+/**
+ * The available linting providers, in fallback cascade order.
+ * We register the disposable ones with Nova for deactivation, see {@link deactivate}.
+ * @see {@link registerIssueAssistant} as to their usage.
+ */
+const providers = [eslint, osacompile]
+
+/**
+ * The IssueCollection for the extension’s linter functionality.
+ * @see {@link registerIssueAssistant} as to the how and why of this.
+ */
+const collection = new IssueCollection()
 
 /**
  * Ensure included binaries are executable.
- * @function activate
+ * @function chmodBinaries
  */
-exports.activate = function () {
-  const location = binDir()
-  const binaries = nova.fs.listdir(location)
-    .map(name => nova.path.join(location, name))
+function chmodBinaries () {
+  const binaries = nova.fs.listdir(binDir)
+    .map(name => nova.path.join(binDir, name))
     .filter(path => {
       return nova.fs.stat(path).isFile() && !nova.fs.access(path, nova.fs.X_OK)
     })
@@ -41,19 +49,6 @@ exports.activate = function () {
     chmod.onDidExit(code => { if (code > 0) console.error(stderr.join('')) })
     chmod.start()
   }
-}
-
-/**
- * Unregister all Disposable items in the extension state.
- * By rights, Nova should do that by itself as part of the extension life cycle,
- * but that seems to not (always) be the case.
- * @function deactivate
- */
-exports.deactivate = function () {
-  Object.keys(state).forEach(key => {
-    const item = state[key]
-    if (item != null && Disposable.isDisposable(item)) item.dispose()
-  })
 }
 
 /**
@@ -96,44 +91,48 @@ exports.deactivate = function () {
  */
 
 /**
- * The available linting providers.
- */
-const providers = [eslint, osacompile]
-providers.forEach(item => {
-  if (Disposable.isDisposable(item)) state.providers.add(item)
-})
-
-/**
  * Register an IssueAssistant instance with Nova’s AssistantRegistry.
  * This will forward the `provideIssues` request to the first {@link Linter}
  * from an ordered list that responds true to both `canSetup()` and `canLint()`.
  * As a side effect, it will set `state.issueAssistant` correctly.
  * @function registerAssistant
- * @returns {Disposable} The registered handler.
  */
-function registerAssistant () {
-  if (state.issueAssistant != null) {
-    state.issueAssistant.dispose()
-    state.issueAssistant = null
-  }
-
-  let assistant = state.issueAssistant
+function registerIssueAssistant () {
   const mode = getLocalConfig('jxa.linting.mode')
-  if (assistant == null && mode !== 'off') {
+
+  if (state.issueMode === mode) return
+
+  state.issueMode = mode
+  if (state.issueAssistant != null) unregisterIssueAssistant()
+  if (state.issueMode !== 'off') {
     const available = providers.filter(item => item.canSetup(nova.workspace))
 
     let provider = null
     if (available.length) {
       /**
-       * The issue request handling function. This dynamically dispatches
-       * the request to the best available linter (see above), and returns
-       * an information pseudo-Issue if no linter is available.
+       * The issue request handling function. This dynamically dispatches the
+       * request to the best available linter (see above). Because Nova, as of 1.2,
+       * does not clear the global IssueCollection properly when switching between
+       * onSave and onChange modes, but reconstructing the event management of the
+       * IssueAssistantRegistry would be painful, we cheat: we register an assistant,
+       * but always return nada from it, filling our own IssueCollection instead.
        * @implements {external:IssueAssistant}
        */
       provider = {
         provideIssues: function (editor) {
           const linter = available.find(item => item.canLint(editor))
-          if (linter != null) return linter[mode](editor)
+          const uri = editor.document.uri
+
+          if (linter != null) {
+            return linter[mode](editor)
+              .then(issues => {
+                collection.set(uri, issues)
+                return []
+              })
+              .catch(message => console.error(message))
+          }
+
+          // Information pseudo-Issue if no linter is available.
           return new Promise((resolve, reject) => {
             if (!nova.config.get('jxa.linting.hide-info')) {
               const issue = new Issue()
@@ -142,37 +141,69 @@ function registerAssistant () {
               issue.line = 0
               issue.column = 0
               issue.severity = IssueSeverity.Info
-              resolve([issue])
-            } else {
-              resolve([])
+              collection.set(uri, [issue])
             }
+            resolve([])
           })
         }
       }
     }
 
     if (provider != null) {
-      const options = { event: mode }
-      assistant = nova.assistants.registerIssueAssistant(syntax, provider, options)
+      const options = { event: state.issueMode }
+      state.issueAssistant = nova.assistants.registerIssueAssistant(syntax, provider, options)
     }
   }
-
-  return assistant
 }
 
-// Register IssueAssistant (linting) functionality.
-state.issueAssistant = registerAssistant()
+/**
+ * Unregister the current IssueAssistant instance from Nova’s AssistantRegistry.
+ */
+function unregisterIssueAssistant () {
+  state.issueAssistant.dispose()
+  state.issueAssistant = null
+  collection.clear()
+}
 
-// Register Commands.
-state.commands.add(
+/**
+ * Register the extension Configuration listeners.
+ * This ensures changed prefs take effect immediately.
+ */
+function registerListeners () {
+  [nova.workspace.config, nova.config].forEach(config => {
+    config.onDidChange('jxa.linting.mode', registerIssueAssistant)
+  })
+}
+
+/**
+ * Register the extension Commands.
+ */
+function registerCommands () {
   nova.commands.register('fileToEditor', (editor) => {
     const range = new Range(0, editor.document.length)
     toScriptEditor(editor.getTextInRange(range))
   })
-)
 
-state.commands.add(
   nova.commands.register('selectionToEditor', (editor) => {
     toScriptEditor(editor.selectedText)
   })
-)
+}
+
+/**
+ * Initialise extension in workspace:
+ *
+ * - ensure binaries are executable after install;
+ * - register the IssueAssistant;
+ * - register listeners for prefs;
+ * - register commands;
+ * - register disposable providers with Nova.
+ */
+exports.activate = function () {
+  if (!nova.inDevMode()) chmodBinaries()
+  registerIssueAssistant()
+  registerListeners()
+  registerCommands()
+  providers.forEach(item => {
+    if (Disposable.isDisposable(item)) nova.subscriptions.add(item)
+  })
+}
