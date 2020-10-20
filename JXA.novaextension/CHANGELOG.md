@@ -1,15 +1,38 @@
-## Version 1.1.0 and 1.1.1
+## Version 1.2.0
 
-The tentpole feature of this release is _ESLint_ based linting of JXA files. This simply picks up your existing _ESLint_ configuration and falls back to `osacompile` if there isn’t any. It will hopefully alleviate the fact that the current [_ESLint_ extension](nova://extension/?id=apexskier.eslint) doesn’t work with JXA files; the JXA extension doesn’t try to provide the same level of features, though.
+This is a spit-and-polish release. Behind the scenes, the linting functionality has been entirely refactored, but what you should notice from that is mainly that it works better.
 
 Added:
 
-- _ESLint_ based linting of JXA files. See the README’s **A note on linting** section for details.
+- Linters add informative entries to the Problems pane (but only when “real” issues are found). See the screenshot in the [README](nova://extension/?id=net.kopischke.jxa) for an example.
+- The Problems pane shows an information message when no linter is available for the open source file.
+- The display of informative pseudo-issues (like the two mentioned above) can be disabled globally.
+- The stripping of the original source extension when building can be disabled in the task settings.
+- A command in the Extensions menu to open the extension’s workspace preferences.
+
+Fixed:
+
+- The Problems pane could display duplicated issues for the editor that was active when the extension activated.
+- Issues displayed in the Problems pane when using on save linting could stick around indefinitely when switching to linting on change.
+- _ESLint_ would try to lint files originating outside the workspace, which would fail or have unexpected results ([rules are path specific](https://eslint.org/docs/user-guide/configuring)). The extension now falls back to `osacompile` instead.
+- Retrieving a local configuration value derived from a global value would fail for boolean values.
+
+Other changes:
+
+- _ESLint_ linting now directly parses the JSON output. The custom formatter has been removed. As it turns out, that is what all ESlint CLI formatters actually do, so we might as well cut out the middle person.
+
+## Version 1.1.0 and 1.1.1
+
+The tentpole feature of this release is [_ESLint_](https://eslint.org) based linting of JXA files. This simply picks up your existing _ESLint_ configuration and falls back to `osacompile` if there isn’t any. It will hopefully alleviate the fact that the current [_ESLint_ extension](nova://extension/?id=apexskier.eslint) doesn’t work with JXA files; the JXA extension doesn’t try to provide the same level of features, though.
+
+Added:
+
+- _ESLint_ based linting of JXA files. See the [README](nova://extension/?id=net.kopischke.jxa)’s **A note on linting** section for details.
 - Cascading settings: extension options can now be set at the global level and at the workspace level, with the latter inheriting from, or overriding, the former.
 
 Fixed in 1.1.1:
 
-- A glitch in the README’s A note on linting section.
+- A glitch in the README’s **A note on linting** section.
 
 ## Version 1.0.3
 
