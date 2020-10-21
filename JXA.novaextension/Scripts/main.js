@@ -19,6 +19,7 @@ const syntax = 'javascript+jxa'
 const state = {
   issueAssistant: null,
   issueMode: null,
+  usingESLint: null,
   activationErrorHandled: false
 }
 
@@ -116,14 +117,18 @@ function chmodBinaries () {
  * @function registerAssistant
  */
 function registerIssueAssistant () {
-  const mode = getLocalConfig('jxa.linting.mode')
+  const issueMode = getLocalConfig('jxa.linting.mode')
+  const usingESLint = !nova.config.get('jxa.linting.eslint-off')
+  if (state.issueMode === issueMode && state.usingESLint === usingESLint) return
 
-  if (state.issueMode === mode) return
+  state.issueMode = issueMode
+  state.usingESLint = usingESLint
 
-  state.issueMode = mode
   if (state.issueAssistant != null) unregisterIssueAssistant()
   if (state.issueMode !== 'off') {
-    const available = providers.filter(item => item.canSetup(nova.workspace))
+    const enabled = providers.slice() // we need an independent copy!
+    if (!state.usingESLint) enabled.shift() // remove eslint from list
+    const available = enabled.filter(item => item.canSetup(nova.workspace))
 
     let provider = null
     if (available.length) {
@@ -149,7 +154,7 @@ function registerIssueAssistant () {
               const linter = available.find(item => item.canLint(editor))
 
               if (linter != null) {
-                linter[mode](editor)
+                linter[issueMode](editor)
                   .then(issues => collection.set(uri, issues))
                   .catch(error => console.error(error.message))
               } else if (!nova.config.get('jxa.linting.hide-info')) {
@@ -196,6 +201,8 @@ function registerListeners () {
   [nova.workspace.config, nova.config].forEach(config => {
     config.onDidChange('jxa.linting.mode', registerIssueAssistant)
   })
+
+  nova.config.onDidChange('jxa.linting.eslint-off', registerIssueAssistant)
 }
 
 /**

@@ -54,15 +54,30 @@
       "default": false
     },
     {
-      "key": "jxa.linting.eslint-binary",
-      "title": "eslint binary path",
-      "description": "Path to the eslint binary to use when linting. If this is unset, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
-      "type": "path",
-      "required": false,
-      "allowFiles": true,
-      "allowFolders": false,
-      "relative": false,
-      "default": null
+      "key": "jxa.linting.eslint-off",
+      "title": "Do not use Eslint",
+      "description": "Limit JXA linting to osacompile.",
+      "type": "boolean",
+      "default": false
+    },
+    {
+      "key": "jxa.eslint",
+      "title": "ESLint settings",
+      "description": "The following options manage the ESLint based linting functionality.",
+      "type": "section",
+      "children": [
+        {
+          "key": "jxa.linting.eslint-binary",
+          "title": "eslint binary path",
+          "description": "Path to the eslint binary to use when linting. If this is unset, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
+          "type": "path",
+          "required": false,
+          "allowFiles": true,
+          "allowFolders": false,
+          "relative": false,
+          "default": null
+        }
+      ]
     }
   ],
 
@@ -81,15 +96,23 @@
       "default": null
     },
     {
-      "key": "jxa.linting.eslint-binary",
-      "title": "eslint binary path",
-      "description": "Path to the eslint binary to use when linting. If this is unset, the global setting is used. If that is unset too, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
-      "type": "path",
-      "required": false,
-      "allowFiles": true,
-      "allowFolders": false,
-      "relative": false,
-      "default": null
+      "key": "jxa.eslint",
+      "title": "ESLint settings",
+      "description": "The following options manage the ESLint based linting functionality.",
+      "type": "section",
+      "children": [
+        {
+          "key": "jxa.linting.eslint-binary",
+          "title": "eslint binary path",
+          "description": "Path to the eslint binary to use when linting. If this is unset, the global setting is used. If that is unset too, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
+          "type": "path",
+          "required": false,
+          "allowFiles": true,
+          "allowFolders": false,
+          "relative": false,
+          "default": null
+        }
+      ]
     }
   ],
 
