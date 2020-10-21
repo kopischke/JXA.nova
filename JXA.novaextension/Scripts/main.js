@@ -138,30 +138,35 @@ function registerIssueAssistant () {
        */
       provider = {
         provideIssues: function (editor) {
-          const linter = available.find(item => item.canLint(editor))
-          const uri = editor.document.uri
-
-          if (linter != null) {
-            return linter[mode](editor)
-              .then(issues => {
-                collection.set(uri, issues)
-                return []
-              })
-              .catch(error => console.error(error.message))
-          }
-
-          // Information pseudo-Issue if no linter is available.
           return new Promise((resolve, reject) => {
-            if (!nova.config.get('jxa.linting.hide-info')) {
-              const issue = new Issue()
-              issue.source = nova.extension.name
-              issue.message = 'Linting not available.'
-              issue.line = 0
-              issue.column = 0
-              issue.severity = IssueSeverity.Info
-              collection.set(uri, [issue])
+            const uri = editor.document.uri
+            if (editor.document.isEmpty) {
+              collection.remove(uri)
+              resolve([])
             }
-            resolve([])
+
+            try {
+              const linter = available.find(item => item.canLint(editor))
+
+              if (linter != null) {
+                linter[mode](editor)
+                  .then(issues => collection.set(uri, issues))
+                  .catch(error => console.error(error.message))
+              } else if (!nova.config.get('jxa.linting.hide-info')) {
+                // Information pseudo-Issue if no linter is available.
+                const issue = new Issue()
+                issue.source = nova.extension.name
+                issue.message = 'Linting not available.'
+                issue.line = 0
+                issue.column = 0
+                issue.severity = IssueSeverity.Info
+                collection.set(uri, [issue])
+              }
+            } catch (error) {
+              console.error(error.message)
+            } finally {
+              resolve([])
+            }
           })
         }
       }

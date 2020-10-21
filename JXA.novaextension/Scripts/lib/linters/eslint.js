@@ -1,9 +1,11 @@
 /**
  * @file Linting functionality via ESLint.
  * @external Linter
+ * @external RunResults
  * @implements {external:Linter}
  */
-const { getLocalConfig, requireJSON, workspaceContains } = require('../utils')
+const { runAsync } = require('../process')
+const { getEditorText, getLocalConfig, requireJSON, workspaceContains } = require('../utils')
 
 /**
  * Check if the linter can be set up  in a workspace This is always true,
@@ -129,6 +131,25 @@ function issuesInfo (eslintJSON) {
 }
 
 /**
+ * Process the results of an asynchronous `eslint` call.
+ * @returns {Array.<object>} An array of {@link Issue} objects.
+ * @param {external:RunResults} results - The results of the {@link runAsync}} call.
+ * @throws {Error} When `eslint` exits with a code > 1.
+ */
+function processResults (results) {
+  const { code, stderr, stdout } = results
+  if (code > 1) {
+    const msg = stderr.length ? stderr : 'Unexpected ESLint failure'
+    throw new Error(msg)
+  }
+  let issues = parseIssues(stdout)
+  if (issues.length && !nova.config.get('jxa.linting.hide-info')) {
+    issues = issues.concat(issuesInfo(stdout))
+  }
+  return issues
+}
+
+/**
  * Check if the linter can be set up  in a workspace This is always true,
  * as ESLint installation and configuration can happen anytime.
  * @returns {boolean} Whether the linter can process the document.
@@ -163,56 +184,22 @@ exports.canLint = function (editor) {
  * @returns {Promise} Asynchronous issues collection.
  * @param {object} editor - The TextEditor the linter is called on.
  */
-exports.onChange = function (editor) {
-  let file = editor.document.path
-  const range = new Range(0, editor.document.length)
-  const string = editor.getTextInRange(range)
+exports.onChange = async function (editor) {
+  const [bin, args, shell] = getProcessParams()
+  const opts = {
+    args: args.concat(['--format', 'json', '--stdin']),
+    shell: shell
+  }
 
-  return new Promise((resolve, reject) => {
-    try {
-      const [bin, args, shell] = getProcessParams()
-      const opts = {
-        args: args.concat(['--format', 'json', '--stdin']),
-        shell: shell
-      }
+  const file = editor.document.path || nova.path.join(
+    nova.workspace.path,
+    editor.document.uri.replace('unsaved://', '')
+  )
+  opts.args.push('--stdin-filename', file)
 
-      if (file == null) {
-        file = nova.path.join(
-          nova.workspace.path,
-          editor.document.uri.replace('unsaved://', '')
-        )
-      }
-
-      opts.args.push('--stdin-filename', file)
-      const linter = new Process(bin, opts)
-      const stdout = []
-      const stderr = []
-
-      linter.onStdout(line => stdout.push(line))
-      linter.onStderr(line => stderr.push(line))
-      linter.onDidExit(code => {
-        if (code > 1) {
-          const msg = stderr.length ? stderr.join('') : 'Unexpected ESLint failure'
-          reject(new Error(msg))
-        }
-        if (stderr.length) console.warn(stderr.join(''))
-
-        const results = stdout.join('')
-        let issues = parseIssues(results)
-        if (issues.length && !nova.config.get('jxa.linting.hide-info')) {
-          issues = issues.concat(issuesInfo(results))
-        }
-        resolve(issues)
-      })
-      linter.start()
-
-      const writer = linter.stdin.getWriter()
-      writer.write(string)
-      writer.close()
-    } catch (error) {
-      reject(error)
-    }
-  })
+  const source = getEditorText(editor.document)
+  const results = await runAsync(bin, opts, source)
+  return processResults(results)
 }
 
 /**
@@ -221,39 +208,12 @@ exports.onChange = function (editor) {
  * @param {object} editor - The TextEditor the linter is called on.
  * @static
  */
-exports.onSave = function (editor) {
-  const file = editor.document.path
-
-  return new Promise((resolve, reject) => {
-    try {
-      const [bin, args, shell] = getProcessParams()
-      const opts = {
-        args: args.concat(['--format', 'json', file]),
-        shell: shell
-      }
-      const linter = new Process(bin, opts)
-      const stdout = []
-      const stderr = []
-
-      linter.onStdout(line => stdout.push(line))
-      linter.onStderr(line => stderr.push(line))
-      linter.onDidExit(code => {
-        if (code > 1) {
-          const msg = stderr.length ? stderr.join('') : 'Unexpected ESLint failure'
-          reject(new Error(msg))
-        }
-        if (stderr.length) console.warn(stderr.join(''))
-
-        const results = stdout.join('')
-        let issues = parseIssues(results)
-        if (issues.length && !nova.config.get('jxa.linting.hide-info')) {
-          issues = issues.concat(issuesInfo(results))
-        }
-        resolve(issues)
-      })
-      linter.start()
-    } catch (error) {
-      reject(error)
-    }
-  })
+exports.onSave = async function (editor) {
+  const [bin, args, shell] = getProcessParams()
+  const opts = {
+    args: args.concat(['--format', 'json', editor.document.path]),
+    shell: shell
+  }
+  const results = await runAsync(bin, opts)
+  return processResults(results)
 }
