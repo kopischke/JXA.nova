@@ -48,8 +48,8 @@ function getProcessParams () {
   if (packageJSON) {
     const { dependencies, devDependencies } = packageJSON
     if (
-      (dependencies && Object.keys(dependencies).includes('eslint')) ||
-      (devDependencies && Object.keys(devDependencies).includes('eslint'))
+      (dependencies && 'eslint' in dependencies) ||
+      (devDependencies && 'eslint' in devDependencies)
     ) {
       return ['npx', ['--no-install', 'eslint'], true]
     }
