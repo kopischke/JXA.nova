@@ -224,18 +224,6 @@ function registerCommands () {
 }
 
 /**
- * Show an error panel to the user.
- */
-function handleActivationError () {
-  if (state.activationErrorHandled === false) {
-    let msg = `There was an error activating the “${nova.extension.name}” extension. `
-    msg += 'Please check the extension console for errors.'
-    nova.workspace.showErrorMessage(msg)
-    state.activationErrorHandled = true
-  }
-}
-
-/**
  * Initialise extension in workspace:
  *
  * - ensure binaries are executable after install;
@@ -245,10 +233,17 @@ function handleActivationError () {
  * - register disposable providers with Nova.
  */
 exports.activate = function () {
-  chmodBinaries().catch(error => {
+  const dispatchError = error => {
     console.error(error.message)
-    handleActivationError()
-  })
+    if (state.activationErrorHandled === false) {
+      let msg = `There was an error activating the “${nova.extension.name}” extension. `
+      msg += 'Please check the extension console for errors.'
+      nova.workspace.showErrorMessage(msg)
+      state.activationErrorHandled = true
+    }
+  }
+
+  chmodBinaries().catch(dispatchError)
 
   try {
     registerIssueAssistant()
@@ -258,6 +253,6 @@ exports.activate = function () {
       if (Disposable.isDisposable(item)) nova.subscriptions.add(item)
     })
   } catch (error) {
-    handleActivationError()
+    dispatchError(error)
   }
 }
