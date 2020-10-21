@@ -104,7 +104,7 @@ exports.onChange = function (editor) {
       writer.write(string)
       writer.close()
     } catch (error) {
-      reject(error.message)
+      reject(error)
     }
   })
 }
@@ -131,7 +131,7 @@ exports.onSave = function (editor) {
       })
       linter.start()
     } catch (error) {
-      reject(error.message)
+      reject(error)
     }
   })
 }

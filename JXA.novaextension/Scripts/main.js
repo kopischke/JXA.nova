@@ -148,7 +148,7 @@ function registerIssueAssistant () {
                 collection.set(uri, issues)
                 return []
               })
-              .catch(message => console.error(message))
+              .catch(error => console.error(error.message))
           }
 
           // Information pseudo-Issue if no linter is available.

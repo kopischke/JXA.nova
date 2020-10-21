@@ -191,7 +191,10 @@ exports.onChange = function (editor) {
       linter.onStdout(line => stdout.push(line))
       linter.onStderr(line => stderr.push(line))
       linter.onDidExit(code => {
-        if (code > 1) reject(stderr.length ? stderr.join('') : 'Unexpected ESLint failure')
+        if (code > 1) {
+          const msg = stderr.length ? stderr.join('') : 'Unexpected ESLint failure'
+          reject(new Error(msg))
+        }
         if (stderr.length) console.warn(stderr.join(''))
 
         const results = stdout.join('')
@@ -207,7 +210,7 @@ exports.onChange = function (editor) {
       writer.write(string)
       writer.close()
     } catch (error) {
-      reject(error.message)
+      reject(error)
     }
   })
 }
@@ -235,7 +238,10 @@ exports.onSave = function (editor) {
       linter.onStdout(line => stdout.push(line))
       linter.onStderr(line => stderr.push(line))
       linter.onDidExit(code => {
-        if (code > 1) reject(stderr.length ? stderr.join('') : 'Unexpected ESLint failure')
+        if (code > 1) {
+          const msg = stderr.length ? stderr.join('') : 'Unexpected ESLint failure'
+          reject(new Error(msg))
+        }
         if (stderr.length) console.warn(stderr.join(''))
 
         const results = stdout.join('')
@@ -247,7 +253,7 @@ exports.onSave = function (editor) {
       })
       linter.start()
     } catch (error) {
-      reject(error.message)
+      reject(error)
     }
   })
 }
