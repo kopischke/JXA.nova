@@ -1,3 +1,13 @@
+## Version 1.3.0
+
+This release enables Nova’s auto-formatting features for JXA files. For some reason, I assumed this would be inherited from the parent syntax (i.e. JavaScript). I was wrong.
+
+Added:
+- Support for [auto-indentation](https://docs.nova.app/syntax-reference/syntaxes/#indentation-rules) of JXA code.
+- Support for [commenting and uncommenting](https://docs.nova.app/syntax-reference/syntaxes/#comment-rules) JXA code.
+- Support for [bracket functionality](https://docs.nova.app/syntax-reference/syntaxes/#brackets) in JXA code.
+- Support for [surrounding pairs](https://docs.nova.app/syntax-reference/syntaxes/#surrounding-pairs) in JXA code.
+
 ## Version 1.2.1 and 1.2.2
 
 Hotfix releases: the extension activation sequence was failing when the extension was not in ad-hoc (developer) mode, which left commands and linting functionality non-functional. The whole sequence is now more robust and should notify users when something went wrong while activating. It should also be slightly faster, as the check for the executable status of the included binaries is now performed asynchronously.
