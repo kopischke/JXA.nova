@@ -2,6 +2,7 @@ const eslint = require('./lib/linters/eslint')
 const osacompile = require('./lib/linters/osacompile')
 const { toScriptEditor } = require('./lib/commands')
 const { binDir } = require('./lib/extension')
+const { runAsync } = require('./lib/process')
 const { getLocalConfig } = require('./lib/utils')
 
 /**
@@ -54,18 +55,14 @@ function chmodBinaries () {
 
       const nonexec = binaries.filter(path => !nova.fs.access(path, nova.fs.X_OK))
       if (nonexec.length) {
-        const stderr = []
-        const opts = { args: ['+x'].concat(nonexec) }
-        const chmod = new Process('/bin/chmod', opts)
-        chmod.onStderr(line => stderr.push(line))
-        chmod.onDidExit(code => {
-          if (code > 0) reject(new Error(stderr.join('')))
+        const options = { args: ['+x'].concat(nonexec) }
+        runAsync('/bin/chmod', options).then(results => {
+          if (results.code > 0) reject(new Error(results.stderr))
           resolve(nonexec.length)
         })
-        chmod.start()
+      } else {
+        resolve(0)
       }
-
-      resolve(0)
     } catch (error) {
       reject(error)
     }
