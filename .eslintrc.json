@@ -5,7 +5,7 @@
     "plugin:json/recommended"
   ],
   "parserOptions": {
-    "ecmaVersion": 6
+    "ecmaVersion": 8
   },
   "plugins": [
     "jsdoc",
