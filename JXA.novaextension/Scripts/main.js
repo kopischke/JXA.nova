@@ -3,7 +3,7 @@ const osacompile = require('./lib/linters/osacompile')
 const { toScriptEditor } = require('./lib/commands')
 const { binDir } = require('./lib/extension')
 const { runAsync } = require('./lib/process')
-const { getLocalConfig } = require('./lib/utils')
+const { documentIsClosed, getLocalConfig } = require('./lib/utils')
 
 /**
  * The syntax for which to register the linter.
@@ -18,8 +18,6 @@ const syntax = 'javascript+jxa'
  */
 const state = {
   issueAssistant: null,
-  issueMode: null,
-  usingESLint: null,
   activationErrorHandled: false
 }
 
@@ -117,17 +115,14 @@ function chmodBinaries () {
  * @function registerAssistant
  */
 function registerIssueAssistant () {
-  const issueMode = getLocalConfig('jxa.linting.mode')
-  const usingESLint = !nova.config.get('jxa.linting.eslint-off')
-  if (state.issueMode === issueMode && state.usingESLint === usingESLint) return
-
-  state.issueMode = issueMode
-  state.usingESLint = usingESLint
+  const mode = getLocalConfig('jxa.linting.mode')
+  const eslint = !nova.config.get('jxa.linting.eslint-off')
 
   if (state.issueAssistant != null) unregisterIssueAssistant()
-  if (state.issueMode !== 'off') {
+
+  if (mode !== 'off') {
     const enabled = providers.slice() // we need an independent copy!
-    if (!state.usingESLint) enabled.shift() // remove eslint from list
+    if (!eslint) enabled.shift() // remove eslint from list
     const available = enabled.filter(item => item.canSetup(nova.workspace))
 
     let provider = null
@@ -154,7 +149,7 @@ function registerIssueAssistant () {
               const linter = available.find(item => item.canLint(editor))
 
               if (linter != null) {
-                linter[issueMode](editor)
+                linter[mode](editor)
                   .then(issues => collection.set(uri, issues))
                   .catch(error => console.error(error.message))
               } else if (!nova.config.get('jxa.linting.hide-info')) {
@@ -178,7 +173,7 @@ function registerIssueAssistant () {
     }
 
     if (provider != null) {
-      const options = { event: state.issueMode }
+      const options = { event: mode }
       state.issueAssistant = nova.assistants.registerIssueAssistant(syntax, provider, options)
     }
   }
@@ -194,15 +189,27 @@ function unregisterIssueAssistant () {
 }
 
 /**
- * Register the extension Configuration listeners.
- * This ensures changed prefs take effect immediately.
+ * Register the extension listeners.
+ * This ensures changes to prefs and editors take effect immediately.
  */
 function registerListeners () {
+  const onPrefsChange = (newValue, oldValue) => {
+    if (oldValue !== newValue) registerIssueAssistant()
+  }
+
   [nova.workspace.config, nova.config].forEach(config => {
-    config.onDidChange('jxa.linting.mode', registerIssueAssistant)
+    config.onDidChange('jxa.linting.mode', onPrefsChange)
   })
 
-  nova.config.onDidChange('jxa.linting.eslint-off', registerIssueAssistant)
+  nova.config.onDidChange('jxa.linting.eslint-off', onPrefsChange)
+
+  nova.workspace.onDidAddTextEditor(added => {
+    added.onDidDestroy(destroyed => {
+      if (documentIsClosed(destroyed.document)) {
+        collection.remove(destroyed.document.uri)
+      }
+    })
+  })
 }
 
 /**
@@ -255,4 +262,13 @@ exports.activate = function () {
   } catch (error) {
     dispatchError(error)
   }
+}
+
+/**
+ * Clean up after the extension:
+ *
+ * - void the IssueCollection.
+ */
+exports.deactivate = function () {
+  collection.clear()
 }
