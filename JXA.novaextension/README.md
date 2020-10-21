@@ -14,7 +14,7 @@ Make Nova your editor of choice when developing [_JavaScript for Automation_ (JX
 
 ### A note on linting
 
-This extension does not try to provide a full-fledged _ESLint_ experience. In fact, there would be no _ESLInt_ functionality at all if [the relevant extension](nova://extension/?id=apexskier.eslint) worked for JXA files. As such, installing and configuring _ESLint_ for your project is entirely up to you: the extension simply picks up what is configured anyway.
+This extension does not try to provide a full-fledged _ESLint_ experience. In fact, there would be no _ESLInt_ functionality at all if [the relevant extension](nova://extension/?id=apexskier.eslint) worked reliably for JXA files (see below in the **Caveats* section). As such, installing and configuring _ESLint_ for your project is entirely up to you: the extension simply picks up what is configured anyway.
 
 If you’d rather not go through the motions of doing that for your JXA project, the extension will fall back on `osacompile` for linting: be aware that this is bare bones at best, as it  will only report parsing errors (the first parsing error only, to be precise). If you need to check your coding style, configure _ESLint_ to work with your JXA files (my [shareable JXA ESLint config](https://www.npmjs.com/package/eslint-config-jxa) might help).
 
@@ -34,13 +34,15 @@ Build task settings (showcasing German localisation):
 
 ## Caveats
 
-As of version 1.1 and Nova 1.2, there is a limitation to this extension you should be aware of:
+Currently, there are some oddities you will encounter using this extension you should be aware of. The following have workarounds:
 
-- The JXA syntax is declared as a sub-syntax of JavaScript; Nova does the right thing and activates extensions claiming to process JavaScript on JXA files. Some of these extensions’ functionality, however, will fail to work with JXA files. Notable examples are [_ESLint_](nova://extension/?id=apexskier.eslint) and the [_TypeScript Language Server_](nova://extension/?id=apexskier.typescript). Workaround:
-    - for linting, configure _ESLint_ for your project and use JXA’s own linting support.
-    - for other extensions, temporarily switch to JavaScript via Nova’s syntax picker.
+- The JXA syntax is declared as a sub-syntax of JavaScript; Nova does the right thing and activates extensions claiming to process JavaScript on JXA files. Some of these extensions will still fail to work with JXA files, others will be unreliable. A notable examples of the former is the [_TypeScript Language Server_](nova://extension/?id=apexskier.typescript), one of the latter the [_ESLint_ extension](nova://extension/?id=apexskier.eslint). **Workaround:** temporarily switch to JavaScript via Nova’s syntax picker; for _ESLint_, use JXA’s own support for it.
+- When the regular _ESLint_ extension works, it contributes its own set of issues to the Problems pane, which duplicate JXA’s. This mostly only happens for the first active editor window in the workspace, if at all. **Workaround:** close the affected tab, then re-open that file. Usually, the _ESlint_ extension will fail to pick that up and thus not contribute duplicate issues again. Alternately, there is an option to disable JXA’s own ESLint functionality in the extension preferences.
+- Syntax highlighting of ObjC constructs seeps into nominally [atomic scopes](https://docs.nova.app/syntax-reference/scopes/#atomic-scopes) like strings and comments.
 
-There are also some minor issues that might be Nova bugs, or me misunderstanding how the Nova API works (hop over to the [issues](https://github.com/kopischke/JXA.nova/issues) if you have advice on this):
+Finally, there are some minor annoyances I have no workaround for. These might be Nova bugs, or me misunderstanding how the Nova API works (hop over to the [issues](https://github.com/kopischke/JXA.nova/issues) if you have advice to contribute on any of them):
 
-- Syntax highlighting of ObjC constructs seeps into nominally atomic scopes like strings and comments (no workaround ATM).
-- Syntax highlighting does not always update when the JXA syntax is applied to an already open file (be it through the syntax picker, or because the extension was installed while the file was open). Workaround: open Nova’s preferences and switch your theme to another, then back (you don’t need to close preferences for this to take effect). This will refresh syntax highlighting.
+### Caveats for users of elder Nova versions
+
+The following issues have been resolved in current versions of Nova. They are listed for compatibility reasons with elder Nova versions that might stick around when users decide not to pay for updates: 
+- **Nova versions 1.0 through 1.2:** Syntax highlighting does not always update when the JXA syntax is applied to an already open file (be it through the syntax picker, or because the extension was installed while the file was open). **Workaround:** open Nova’s preferences and switch your theme to another, then back (you don’t need to close preferences for this to take effect). This will refresh syntax highlighting.
