@@ -36,18 +36,16 @@ const collection = new IssueCollection()
 
 /**
  * Ensure included binaries are executable.
- * @returns {Promise} The `chmod` operation.
+ * @returns {Promise} The `chmod` operation (resolved to the count of chmod’ed binaries).
  * @function chmodBinaries
  */
 function chmodBinaries () {
   return new Promise((resolve, reject) => {
     try {
       const location = binDir()
-      const binaries = nova.fs.listdir(location)
-        .map(name => nova.path.join(location, name))
-        .filter(path => {
-          return nova.fs.stat(path).isFile() && !nova.fs.access(path, nova.fs.X_OK)
-        })
+      const binaries = nova.fs.listdir(location).map(
+        name => nova.path.join(location, name)
+      )
 
       if (binaries.length === 0) {
         const msg = `Can’t locate extension binaries at path “${location}”.`
@@ -55,15 +53,23 @@ function chmodBinaries () {
         reject(err)
       }
 
-      const stderr = []
-      const args = { args: ['+x'].concat(binaries) }
-      const chmod = new Process('/bin/chmod', args)
-      chmod.onStderr(line => stderr.push(line))
-      chmod.onDidExit(code => {
-        if (code > 0) reject(new Error(stderr.join('')))
-        resolve(true)
+      const nonexec = binaries.filter(path => {
+        return nova.fs.stat(path).isFile() && !nova.fs.access(path, nova.fs.X_OK)
       })
-      chmod.start()
+
+      if (nonexec.length) {
+        const stderr = []
+        const opts = { args: ['+x'].concat(nonexec) }
+        const chmod = new Process('/bin/chmod', opts)
+        chmod.onStderr(line => stderr.push(line))
+        chmod.onDidExit(code => {
+          if (code > 0) reject(new Error(stderr.join('')))
+          resolve(nonexec.length)
+        })
+        chmod.start()
+      }
+
+      resolve(0)
     } catch (error) {
       reject(error)
     }
@@ -234,12 +240,10 @@ function handleActivationError () {
  * - register disposable providers with Nova.
  */
 exports.activate = function () {
-  if (!nova.inDevMode()) {
-    chmodBinaries().catch(error => {
-      console.error(error.message)
-      handleActivationError()
-    })
-  }
+  chmodBinaries().catch(error => {
+    console.error(error.message)
+    handleActivationError()
+  })
 
   try {
     registerIssueAssistant()
