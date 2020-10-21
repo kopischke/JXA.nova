@@ -15,6 +15,15 @@ exports.getLocalConfig = function (key, type) {
 }
 
 /**
+ * Get the full text contents of a document.
+ * @returns {string} The document text.
+ * @param {object} doc - The {@link TextDocument} whose text should be retrieved.
+ */
+exports.getEditorText = function (doc) {
+  return doc.isEmpty ? '' : doc.getTextInRange(new Range(0, doc.length))
+}
+
+/**
  * Like `require('/path/to/file.json')` in Node.
  * @returns {?object} The contents of package.json (if found).
  * @param {string} path - The path to the JSON file.
