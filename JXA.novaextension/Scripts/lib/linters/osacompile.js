@@ -54,16 +54,15 @@ function processResults (results) {
  * @param {object} _ - The Workspace the linter is to be set up for (ignored).
  */
 exports.canSetup = function (_) {
+  if (!nova.fs.access(binary, nova.fs.X_OK)) {
+    console.error(`osacompile script wrapper '${binary}' is not an executable file.`)
+    return false
+  }
+
   const stat = nova.fs.stat(tmpDir)
   if (stat == null) return true // `jxabuild` will create the directory
   if (!stat.isDirectory() || !nova.fs.access(tmpDir, nova.fs.W_OK)) {
     console.error(`Temporary build directory path '${tmpDir}' is not a writable directory.`)
-    return false
-  }
-
-  const bin = nova.path.join(binDir(), binary)
-  if (!nova.fs.access(bin, nova.fs.X_OK)) {
-    console.error(`osacompile script wrapper '${binary}' is not an executable file.`)
     return false
   }
 
