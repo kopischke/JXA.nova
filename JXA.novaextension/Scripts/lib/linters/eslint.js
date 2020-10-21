@@ -8,36 +8,6 @@ const { runAsync } = require('../process')
 const { getEditorText, getLocalConfig, requireJSON, workspaceContains } = require('../utils')
 
 /**
- * Check if the linter can be set up  in a workspace This is always true,
- * as ESLint installation and configuration can happen anytime.
- * @returns {boolean} Whether the linter can process the document.
- * @param {object} _ - The Workspace the linter is to be set up for (ignored).
- */
-exports.canSetup = function (_) { return true }
-
-/**
- * Check if the linter can process an editor’s document. This is true when:
- * - the document is part of the workspace, and
- * - the workspace contains ESLint configuration data.
- * @returns {boolean} Whether the linter can process the document.
- * @param {object} editor - The TextEditor the linter is called on.
- */
-exports.canLint = function (editor) {
-  const file = editor.document.path
-  if (file == null || workspaceContains(nova.workspace, file)) {
-    const root = nova.workspace.path
-    const eslintrc = nova.fs.listdir(root).filter(name => name.startsWith('.eslintrc.'))
-    if (eslintrc.length) return true
-
-    const packageFile = nova.path.join(root, 'package.json')
-    const packageJSON = requireJSON(packageFile)
-    if (packageJSON) return packageJSON.eslintConfig != null
-  }
-
-  return false
-}
-
-/**
  * Get the parameters for an `eslint` process.
  * @returns {Array.<string, Array.<string>, boolean>} Array of bin path, args, shell needed.
  */
