@@ -1,5 +1,5 @@
 /**
- * @file Extension data not easily retrieved form the global `nova` object.
+ * @file Extension data not easily retrieved from the global `nova` object.
  */
 
 /**
