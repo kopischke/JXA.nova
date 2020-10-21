@@ -1,6 +1,6 @@
-## Version 1.2.1
+## Version 1.2.1 and 1.2.2
 
-Hotfix release: the extension activation sequence was failing when the extension was not in ad-hoc (developer) mode, which left commands and linting functionality non-functional. The whole sequence is now more robust and should notify users when something went wrong while activating. It should also be slightly faster, as the check for the executable status of the included binaries is now performed asynchronously.
+Hotfix releases: the extension activation sequence was failing when the extension was not in ad-hoc (developer) mode, which left commands and linting functionality non-functional. The whole sequence is now more robust and should notify users when something went wrong while activating. It should also be slightly faster, as the check for the executable status of the included binaries is now performed asynchronously.
 
 ## Version 1.2.0
 
