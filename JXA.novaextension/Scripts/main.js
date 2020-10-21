@@ -13,8 +13,13 @@ const syntax = 'javascript+jxa'
  * Extension global state
  * @property {Disposable} [issueAssistant] - The registered IssueAssistant.
  * @property {string} [issueMode] - The activation mode for the registered IssueAssistant.
+ * @property {boolean} activationErrorHandled - Was {@link handleActivationError} called?
  */
-const state = { issueAssistant: null, issueMode: null }
+const state = {
+  issueAssistant: null,
+  issueMode: null,
+  activationErrorHandled: false
+}
 
 /**
  * The available linting providers, in fallback cascade order.
@@ -31,23 +36,38 @@ const collection = new IssueCollection()
 
 /**
  * Ensure included binaries are executable.
+ * @returns {Promise} The `chmod` operation.
  * @function chmodBinaries
  */
 function chmodBinaries () {
-  const binaries = nova.fs.listdir(binDir)
-    .map(name => nova.path.join(binDir, name))
-    .filter(path => {
-      return nova.fs.stat(path).isFile() && !nova.fs.access(path, nova.fs.X_OK)
-    })
+  return new Promise((resolve, reject) => {
+    try {
+      const location = binDir()
+      const binaries = nova.fs.listdir(location)
+        .map(name => nova.path.join(location, name))
+        .filter(path => {
+          return nova.fs.stat(path).isFile() && !nova.fs.access(path, nova.fs.X_OK)
+        })
 
-  if (binaries.length) {
-    const stderr = []
-    const args = { args: ['+x'].concat(binaries) }
-    const chmod = new Process('/bin/chmod', args)
-    chmod.onStderr(line => stderr.push(line))
-    chmod.onDidExit(code => { if (code > 0) console.error(stderr.join('')) })
-    chmod.start()
-  }
+      if (binaries.length === 0) {
+        const msg = `Can’t locate extension binaries at path “${location}”.`
+        const err = new Error(msg)
+        reject(err)
+      }
+
+      const stderr = []
+      const args = { args: ['+x'].concat(binaries) }
+      const chmod = new Process('/bin/chmod', args)
+      chmod.onStderr(line => stderr.push(line))
+      chmod.onDidExit(code => {
+        if (code > 0) reject(new Error(stderr.join('')))
+        resolve(true)
+      })
+      chmod.start()
+    } catch (error) {
+      reject(error)
+    }
+  })
 }
 
 /**
@@ -193,6 +213,18 @@ function registerCommands () {
 }
 
 /**
+ * Show an error panel to the user.
+ */
+function handleActivationError () {
+  if (state.activationErrorHandled === false) {
+    let msg = `There was an error activating the “${nova.extension.name}” extension. `
+    msg += 'Please check the extension console for errors.'
+    nova.workspace.showErrorMessage(msg)
+    state.activationErrorHandled = true
+  }
+}
+
+/**
  * Initialise extension in workspace:
  *
  * - ensure binaries are executable after install;
@@ -202,11 +234,21 @@ function registerCommands () {
  * - register disposable providers with Nova.
  */
 exports.activate = function () {
-  if (!nova.inDevMode()) chmodBinaries()
-  registerIssueAssistant()
-  registerListeners()
-  registerCommands()
-  providers.forEach(item => {
-    if (Disposable.isDisposable(item)) nova.subscriptions.add(item)
-  })
+  if (!nova.inDevMode()) {
+    chmodBinaries().catch(error => {
+      console.error(error.message)
+      handleActivationError()
+    })
+  }
+
+  try {
+    registerIssueAssistant()
+    registerListeners()
+    registerCommands()
+    providers.forEach(item => {
+      if (Disposable.isDisposable(item)) nova.subscriptions.add(item)
+    })
+  } catch (error) {
+    handleActivationError()
+  }
 }
