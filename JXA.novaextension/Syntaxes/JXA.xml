@@ -56,18 +56,18 @@
 					<string>delay</string>
 				</strings>
 			</scope>
-      <!-- The next two are contextual: they will only work if '$' is used literally, e.g.
-           `const objcGlobal = $; objcGlobal.NSString.stringWithString('foo')` will not be
-           recognised. As using '$' as is is the mainstream usage case, improvements in
-           legibility and completion more than compensate for this limitation (IMO). -->
+			<!-- The next two are contextual: they will only work if '$' is used literally, e.g.
+			     `const objcGlobal = $; objcGlobal.NSString.stringWithString('foo')` will not be
+			     recognised. As using '$' as is is the mainstream usage case, improvements in
+			     legibility and completion more than compensate for this limitation (IMO). -->
 			<!-- ObjC Bridge types (e.g. "NSString") -->
 			<scope name="jxa.identifier.type.objc">
-        <symbol type="type" scope="private" />
+				<symbol type="type" scope="private" />
 				<expression>(?&lt;=\$\.)([A-Z]{2}([A-Z][A-Za-z0-9]+)+)(?!\()\b</expression>
 			</scope>
 			<!-- ObjC Bridge functions (e.g. "NSStringFromRect()") -->
 			<scope name="jxa.identifier.function.objc">
-        <symbol type="function" scope="private" />
+				<symbol type="function" scope="private" />
 				<expression>(?&lt;=\$\.)([A-Z]{2}([A-Z][A-Za-z0-9]+)+(?=\())\b</expression>
 			</scope>
 		</collection>

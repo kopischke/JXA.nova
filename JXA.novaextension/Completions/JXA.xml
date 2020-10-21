@@ -43,21 +43,21 @@
 		<behavior suffix="\(">
 			<append>()</append>
 		</behavior>
-    <completion string="bindFunction" symbol="method" />
-    <completion string="deepUnwrap" symbol="method" />
-    <completion string="import" symbol="method" />
-    <completion string="registerSubclass" symbol="method" />
-    <completion string="unwrap" symbol="method" />
-    <completion string="wrap" symbol="method" />
+		<completion string="bindFunction" symbol="method" />
+		<completion string="deepUnwrap" symbol="method" />
+		<completion string="import" symbol="method" />
+		<completion string="registerSubclass" symbol="method" />
+		<completion string="unwrap" symbol="method" />
+		<completion string="wrap" symbol="method" />
 	</set>
 
 	<set name="jxa.core.progress">
 		<behavior suffix="\(">
 			<append>()</append>
 		</behavior>
-    <completion string="additionalDescription" symbol="property" />
-    <completion string="completedUnitCount" symbol="property" />
-    <completion string="description" symbol="property" />
-    <completion string="totalUnitCount" symbol="property" />
-    </set>
+		<completion string="additionalDescription" symbol="property" />
+		<completion string="completedUnitCount" symbol="property" />
+		<completion string="description" symbol="property" />
+		<completion string="totalUnitCount" symbol="property" />
+		</set>
 </completions>
