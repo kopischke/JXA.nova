@@ -43,20 +43,16 @@ function chmodBinaries () {
   return new Promise((resolve, reject) => {
     try {
       const location = binDir()
-      const binaries = nova.fs.listdir(location).map(
-        name => nova.path.join(location, name)
-      )
+      const binaries = nova.fs.listdir(location)
+        .map(name => nova.path.join(location, name))
+        .filter(path => nova.fs.stat(path).isFile())
 
       if (binaries.length === 0) {
         const msg = `Can’t locate extension binaries at path “${location}”.`
-        const err = new Error(msg)
-        reject(err)
+        reject(new Error(msg))
       }
 
-      const nonexec = binaries.filter(path => {
-        return nova.fs.stat(path).isFile() && !nova.fs.access(path, nova.fs.X_OK)
-      })
-
+      const nonexec = binaries.filter(path => !nova.fs.access(path, nova.fs.X_OK))
       if (nonexec.length) {
         const stderr = []
         const opts = { args: ['+x'].concat(nonexec) }
