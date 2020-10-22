@@ -3,6 +3,19 @@
  */
 
 /**
+ * Shim for the `TextDocument.isClosed` instance method; as of Nova 1.2,
+ * that always returns true, even in a `TextEditor.onDidDestroy` callback.
+ * @returns {boolean} Whether the document is open in at least one editor.
+ * @param {object} document - The TextDocument to check.
+ */
+exports.documentIsClosed = function (document) {
+  const open = nova.workspace.textEditors.find(
+    item => item.document.uri === document.uri
+  )
+  return open == null
+}
+
+/**
  * Get the locally valid configuration setting (workspace if set, else global).
  * @returns {?*} The configuration value (if any).
  * @param {string} key - The configuration key to look up.
