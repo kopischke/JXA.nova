@@ -18,7 +18,6 @@ const binary = nova.path.join(binDir(), 'jxabuild')
  */
 function issuesInfo () {
   const issue = new Issue()
-  issue.source = nova.extension.name
   issue.message = 'Linting provided by osacompile.'
   issue.line = 0
   issue.column = 0
@@ -43,6 +42,7 @@ function processResults (results) {
   if (issues.length && !nova.config.get('jxa.linting.hide-info')) {
     issues = issues.concat(issuesInfo())
   }
+  issues.forEach(issue => { issue.source = 'osacompile' })
   return issues
 }
 
