@@ -3,7 +3,7 @@
  */
 
 /**
- * Shim for the `TextDocument.isClosed` instance method; as of Nova 1.2,
+ * Shim for the `TextDocument.isClosed` instance method; as of Nova 2,
  * that always returns true, even in a `TextEditor.onDidDestroy` callback.
  * @returns {boolean} Whether the document is open in at least one editor.
  * @param {object} document - The TextDocument to check.
@@ -48,7 +48,7 @@ exports.requireJSON = function (path) {
 }
 
 /**
- * Shim for the `Workspace.contains` instance method; as of Nova 1.2,
+ * Shim for the `Workspace.contains` instance method; as of Nova 2,
  * that always returns true and `Workspace.relativizePath` always returns
  * a relative path, with as many  '../' as needed.
  * @see {@link https://docs.nova.app/api-reference/workspace/#contains-path}
