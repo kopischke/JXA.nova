@@ -1,4 +1,4 @@
-## Version 1.4.0
+## Version 1.4.0 and 1.4.1
 
 Added:
 
@@ -9,6 +9,10 @@ Fixed:
 
 - Issues displayed in the Problems pane would stick around after the document they refer to was closed.
 - The `osacompile` linter would not actually check for the presence of an executable for the wrapper script it needs.
+
+Fixed in 1.4.1:
+
+- Incoherent README “Caveats” section.
 
 Other changes:
 
