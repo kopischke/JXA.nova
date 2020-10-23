@@ -1,3 +1,22 @@
+## Version 1.4.0
+
+Added:
+
+- Option to globally disable JXA’s _ESLint_ functionality (i.e., lint with `osascompile` only) in the extension settings.
+- Issues reported by `osacompile` are now correctly showing their source as “osacompile”.
+
+Fixed:
+
+- Issues displayed in the Problems pane would stick around after the document they refer to was closed.
+- The `osacompile` linter would not actually check for the presence of an executable for the wrapper script it needs.
+
+Other changes:
+
+- Asynchronous linter management has been refactored, greatly simplifying the linter modules proper.
+
+**Important notice:** I’ve finally figured out why the first open JXA text editor often reports duplicate ESLint issues. Unluckily, I cannot fix this, as that is the “official” [_ESLint_ extension](nova://extension/?id=apexskier.eslint) doing its part (see the “Caveats” section int the [README](nova://extension/?id=net.kopischke.jxa)).
+
+
 ## Version 1.3.0
 
 This release enables Nova’s auto-formatting features for JXA files. For some reason, I assumed this would be inherited from the parent syntax (i.e. JavaScript). I was wrong.
