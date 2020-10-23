@@ -34,13 +34,13 @@ Build task settings (showcasing German localisation):
 
 ## Caveats
 
-Currently, there are some oddities you will encounter using this extension you should be aware of. The following have workarounds:
+Currently, there are some oddities you will encounter using this extension you should be aware of:
 
 - The JXA syntax is declared as a sub-syntax of JavaScript; Nova does the right thing and activates extensions claiming to process JavaScript on JXA files. Some of these extensions will still fail to work with JXA files, others will be unreliable. A notable examples of the former is the [_TypeScript Language Server_](nova://extension/?id=apexskier.typescript), one of the latter the [_ESLint_ extension](nova://extension/?id=apexskier.eslint). **Workaround:** temporarily switch to JavaScript via Nova’s syntax picker; for _ESLint_, use JXA’s own support for it.
 - When the regular _ESLint_ extension works, it contributes its own set of issues to the Problems pane, which duplicate JXA’s. This mostly only happens for the first active editor window in the workspace, if at all. **Workaround:** close the affected tab, then re-open that file. Usually, the _ESlint_ extension will fail to pick that up and thus not contribute duplicate issues again. Alternately, there is an option to disable JXA’s own ESLint functionality in the extension preferences.
-- Syntax highlighting of ObjC constructs seeps into nominally [atomic scopes](https://docs.nova.app/syntax-reference/scopes/#atomic-scopes) like strings and comments.
+- Syntax highlighting of ObjC constructs seeps into nominally [atomic scopes](https://docs.nova.app/syntax-reference/scopes/#atomic-scopes) like strings and comments (no workaround ATM).
 
-Finally, there are some minor annoyances I have no workaround for. These might be Nova bugs, or me misunderstanding how the Nova API works (hop over to the [issues](https://github.com/kopischke/JXA.nova/issues) if you have advice to contribute on any of them):
+Hop over to the [issues](https://github.com/kopischke/JXA.nova/issues) if you have advice to contribute on any of these issues.
 
 ### Caveats for users of elder Nova versions
 
