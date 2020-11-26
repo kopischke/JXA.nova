@@ -1,3 +1,32 @@
+## Version 2.0.0
+
+This version removes built-in ESLint support and rebuilds OSACompile based linting functionality from the ground up. 
+
+**About the removal of the ESLint feature:** This feature was never meant to be; it was created out of frustration that the only available ESLint extension for Nova would not lint JXA files (unless assigned the JavaScript syntax). This fact has not changed, but there now is an alternative in the extension directory: [my own _µESLint_ extension](nova://extension/?id=net.kopischke.eslint) (if you are not reading this in Nova, find it [here](https://extensions.panic.com/extensions/net.kopischke/net.kopischke.eslint/)), which will do, inside Nova, anything ESLint would do on the command line. Including linting JXA files, if so configured.
+
+As it turns out, ESLint has a lot of options, an amazing amount of extensibility and a fair share of corner cases the “official” ESLint extension does not entirely cover. Addressing all of these only for JXA files made less and less sense the more I learned about ESLint, so I spun the feature off into its own extension. I apologise for any inconvenience this causes, and sincerely hope you will find _µESLint_ not just a replacement, but an improvement.
+
+As a side effect of implementing a standalone linting extension, the built-in, OSACompile based linting feature has become much more reliable. Even if you did not use the ESLint option, you should profit from this shift.
+
+**Removed**
+
+- ESLint linting feature and and all its settings.
+- Option to lint on save only (that never made much sense anyway).
+- Informative pseudo-issues for linters (now there is only one linter in the extension).
+
+**Fixed**
+
+- Build and run tasks would use the last saved state of a file, not its current contents.
+- The line index for issues provided by OSACompile was wrong.
+- Numerous corner cases and race conditions where outdated issues could clutter the Issues Pane.
+- Possible conflicts with other extensions’ settings and / or commands.
+
+**Changed**
+
+- A more polished, higher resolution icon.
+- The extension code has been refactored for easier maintenance.
+- Localisations have been reworked for better scalability to more languages in the future.
+
 ## Version 1.4.0 and 1.4.1
 
 **Added**

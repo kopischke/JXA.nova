@@ -3,7 +3,7 @@
   "name": "JXA",
   "organization": "Kopischke",
   "description": "JavaScript for Automation (JXA) support in Nova.",
-  "version": "1.4.1",
+  "version": "2.0.0",
   "license": "MIT",
   "repository": "https://github.com/kopischke/JXA.nova",
   "bugs": "https://github.com/kopischke/JXA.nova/issues",
