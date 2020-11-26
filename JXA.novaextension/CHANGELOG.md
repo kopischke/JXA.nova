@@ -1,20 +1,20 @@
 ## Version 1.4.0 and 1.4.1
 
-Added:
+**Added**
 
 - Option to globally disable JXA’s _ESLint_ functionality (i.e., lint with `osascompile` only) in the extension settings.
 - Issues reported by `osacompile` are now correctly showing their source as “osacompile”.
 
-Fixed:
+**Fixed**
 
 - Issues displayed in the Problems pane would stick around after the document they refer to was closed.
 - The `osacompile` linter would not actually check for the presence of an executable for the wrapper script it needs.
 
-Fixed in 1.4.1:
+**Fixed in 1.4.1**
 
 - Incoherent README “Caveats” section.
 
-Other changes:
+**Changed**
 
 - Asynchronous linter management has been refactored, greatly simplifying the linter modules proper.
 
@@ -25,7 +25,8 @@ Other changes:
 
 This release enables Nova’s auto-formatting features for JXA files. For some reason, I assumed this would be inherited from the parent syntax (i.e. JavaScript). I was wrong.
 
-Added:
+**Added**
+
 - Support for [auto-indentation](https://docs.nova.app/syntax-reference/syntaxes/#indentation-rules) of JXA code.
 - Support for [commenting and uncommenting](https://docs.nova.app/syntax-reference/syntaxes/#comment-rules) JXA code.
 - Support for [bracket functionality](https://docs.nova.app/syntax-reference/syntaxes/#brackets) in JXA code.
@@ -39,7 +40,7 @@ Hotfix releases: the extension activation sequence was failing when the extensio
 
 This is a spit-and-polish release. Behind the scenes, the linting functionality has been entirely refactored, but what you should notice from that is mainly that it works better.
 
-Added:
+**Added**
 
 - Linters add informative entries to the Problems pane (but only when “real” issues are found). See the screenshot in the [README](nova://extension/?id=net.kopischke.jxa) for an example.
 - The Problems pane shows an information message when no linter is available for the open source file.
@@ -47,14 +48,14 @@ Added:
 - The stripping of the original source extension when building can be disabled in the task settings.
 - A command in the Extensions menu to open the extension’s workspace preferences.
 
-Fixed:
+**Fixed**
 
 - The Problems pane could display duplicated issues for the editor that was active when the extension activated.
 - Issues displayed in the Problems pane when using on save linting could stick around indefinitely when switching to linting on change.
 - _ESLint_ would try to lint files originating outside the workspace, which would fail or have unexpected results ([rules are path specific](https://eslint.org/docs/user-guide/configuring)). The extension now falls back to `osacompile` instead.
 - Retrieving a local configuration value derived from a global value would fail for boolean values.
 
-Other changes:
+**Changed**
 
 - _ESLint_ linting now directly parses the JSON output. The custom formatter has been removed. As it turns out, that is what all ESLint CLI formatters actually do, so we might as well cut out the middle person.
 
@@ -62,12 +63,12 @@ Other changes:
 
 The tentpole feature of this release is [_ESLint_](https://eslint.org) based linting of JXA files. This simply picks up your existing _ESLint_ configuration and falls back to `osacompile` if there isn’t any. It will hopefully alleviate the fact that the current [_ESLint_ extension](nova://extension/?id=apexskier.eslint) doesn’t work with JXA files; the JXA extension doesn’t try to provide the same level of features, though.
 
-Added:
+**Added**
 
 - _ESLint_ based linting of JXA files. See the [README](nova://extension/?id=net.kopischke.jxa)’s **A note on linting** section for details.
 - Cascading settings: extension options can now be set at the global level and at the workspace level, with the latter inheriting from, or overriding, the former.
 
-Fixed in 1.1.1:
+**Fixed in 1.1.1**
 
 - A glitch in the README’s **A note on linting** section.
 
@@ -77,18 +78,18 @@ Hotfix release: correct links to repository and issue tracker.
 
 ## Version 1.0.2
 
-Fixes:
+**Fixed**
 
 - Source code containing escape characters (e.g. `\n`) in strings, comments and regular expression literals getting mangled when passed via selection to a run task, or when passed to the macOS Script Editor.
 - Menu entries for commands not ending with an ellipsis despite opening another app.
 
-Other changes:
+**Changed**
 
 - Improved error handling in case the directory used in validation is not accessible.
 
 ## Version 1.0.1
 
-Hotfix release: ensure included binaries are executable. Fixes tasks, commands and validation failing in 1.0.0.
+**Hotfix release:** ensure included binaries are executable. Fixes tasks, commands and validation failing in 1.0.0.
 
 ## Version 1.0.0
 
