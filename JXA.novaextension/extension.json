@@ -35,49 +35,11 @@
 
   "config": [
     {
-      "key": "jxa.linting.mode",
-      "title": "Linting",
-      "description": "Whether and when automatic linting of open JXA files should be performed.",
-      "type": "enum",
-      "values": [
-        ["off", "Disabled"],
-        ["onSave", "On Save"],
-        ["onChange", "On Change"]
-      ],
-      "default": "off"
-    },
-    {
       "key": "jxa.opts.linting",
       "title": "jxa.opts.linting.title",
       "description": "jxa.opts.linting.description",
       "type": "boolean",
       "default": false
-    },
-    {
-      "key": "jxa.linting.eslint-off",
-      "title": "Do not use Eslint",
-      "description": "Limit JXA linting to osacompile.",
-      "type": "boolean",
-      "default": false
-    },
-    {
-      "key": "jxa.eslint",
-      "title": "ESLint settings",
-      "description": "The following options manage the ESLint based linting functionality.",
-      "type": "section",
-      "children": [
-        {
-          "key": "jxa.linting.eslint-binary",
-          "title": "eslint binary path",
-          "description": "Path to the eslint binary to use when linting. If this is unset, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
-          "type": "path",
-          "required": false,
-          "allowFiles": true,
-          "allowFolders": false,
-          "relative": false,
-          "default": null
-        }
-      ]
     }
   ],
 
@@ -93,41 +55,22 @@
         [false, "jxa.opts.disabled"]
       ],
       "default": null
-    },
-    {
-      "key": "jxa.eslint",
-      "title": "ESLint settings",
-      "description": "The following options manage the ESLint based linting functionality.",
-      "type": "section",
-      "children": [
-        {
-          "key": "jxa.linting.eslint-binary",
-          "title": "eslint binary path",
-          "description": "Path to the eslint binary to use when linting. If this is unset, the global setting is used. If that is unset too, the extension will look for a project-local instance of the binary first, then for a global one. Only set this if you need to use a binary that will not be found in your $PATH.",
-          "type": "path",
-          "required": false,
-          "allowFiles": true,
-          "allowFolders": false,
-          "relative": false,
-          "default": null
-        }
-      ]
     }
   ],
 
   "commands": {
     "editor": [
       {
-        "command": "fileToEditor",
         "title": "jxa.cmd.file2editor.title",
+        "command": "jxa.cmd.file2editor",
         "when": "editorHasFocus",
         "filters": {
           "syntaxes": ["javascript+jxa"]
         }
       },
       {
-        "command": "selectionToEditor",
         "title": "jxa.cmd.selection2editor.title",
+        "command": "jxa.cmd.selection2editor",
         "when": "editorHasSelection && !editorHasMultipleSelections",
         "filters": {
           "syntaxes": ["javascript+jxa"]
@@ -136,8 +79,8 @@
     ],
     "extensions": [
       {
-        "command": "workspaceConfig"
         "title": "jxa.cmd.workspace-config.title",
+        "command": "jxa.cmd.workspace-config"
       }
     ]
   },

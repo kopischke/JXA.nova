@@ -1,13 +1,13 @@
 /**
- * @file Commands functionality.
+ * @file Core extension commands functionality.
  */
-const { binDir } = require('./extension')
+const { runJXA } = require('./jxa')
 
 /**
  * Send the JXA code of the current editor to macOS’ Script Editor.
  * @param {string} source - The JXA source to send to Script Editor.
  */
-exports.toScriptEditor = function (source) {
+exports.toScriptEditor = async function (source) {
   // We have to do a little dance to get all code properly into Script Editor:
   // - using a raw template string ensures Script Editor leaves literal '\n' and such alone;
   // - the `escaped` step makes sure the source does not break out of the template string;
@@ -21,13 +21,6 @@ exports.toScriptEditor = function (source) {
     'doc.checkSyntax()'
   ]
 
-  const runner = new Process(nova.path.join(binDir(), 'jxarun'), { args: ['-'] })
-  const stderr = []
-  runner.onStderr(line => stderr.push(line))
-  runner.onDidExit(code => { if (code > 0) console.error(stderr.join('')) })
-  runner.start()
-
-  const writer = runner.stdin.getWriter()
-  writer.write(script.join('\n'))
-  writer.close()
+  const { code, stderr } = await runJXA(script.join('\n'))
+  if (code > 0) console.error(stderr)
 }

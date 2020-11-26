@@ -1,19 +1,9 @@
 /**
- * @file Utility extension functions.
+ * @file General utility methods for boilerplate poorer extensions.
+ * @version 3.1.0
+ * @author Martin Kopischke <martin@kopischke.net>
+ * @license MIT
  */
-
-/**
- * Shim for the `TextDocument.isClosed` instance method; as of Nova 2,
- * that always returns true, even in a `TextEditor.onDidDestroy` callback.
- * @returns {boolean} Whether the document is open in at least one editor.
- * @param {object} document - The TextDocument to check.
- */
-exports.documentIsClosed = function (document) {
-  const open = nova.workspace.textEditors.find(
-    item => item.document.uri === document.uri
-  )
-  return open == null
-}
 
 /**
  * Get the locally valid configuration setting (workspace if set, else global).
@@ -23,22 +13,26 @@ exports.documentIsClosed = function (document) {
  * @see {@link https://docs.nova.app/api-reference/configuration/}
  */
 exports.getLocalConfig = function (key, type) {
-  const local = nova.workspace.config.get(key, type)
-  return local != null ? local : nova.config.get(key, type)
+  return nova.workspace.config.get(key) != null
+    ? nova.workspace.config.get(key, type)
+    : nova.config.get(key, type)
 }
 
 /**
- * Get the full text contents of a document.
- * @returns {string} The document text.
- * @param {object} doc - The {@link TextDocument} whose text should be retrieved.
+ * Simple event notification.
+ * @param {string} id - NotificationRequest.id.
+ * @param {string} message - NotificationRequest.message.
  */
-exports.getEditorText = function (doc) {
-  return doc.isEmpty ? '' : doc.getTextInRange(new Range(0, doc.length))
+exports.notify = function (id, message) {
+  const request = new NotificationRequest(id)
+  request.title = nova.extension.name
+  request.body = message
+  nova.notifications.add(request)
 }
 
 /**
- * Like `require('/path/to/file.json')` in Node.
- * @returns {?object} The contents of package.json (if found).
+ * Like `require('/path/to/file.json')` in Node. Absolute paths only.
+ * @returns {?object} The parsed contents of the JSON file (if found).
  * @param {string} path - The path to the JSON file.
  */
 exports.requireJSON = function (path) {
@@ -54,10 +48,11 @@ exports.requireJSON = function (path) {
  * @see {@link https://docs.nova.app/api-reference/workspace/#contains-path}
  * @see {@link https://docs.nova.app/api-reference/workspace/#relativizepath-path}
  * @returns {boolean} Whether the path is inside the workspace’s directory hierarchy.
- * @param {object} workspace - The workspace to check.
- * @param {string} path - The path to object to check.
+ * @param {string} path - The path to check.
+ * @param {object} [workspace=nova.workspace] - The workspace to check.
  */
-exports.workspaceContains = function (workspace, path) {
+exports.workspaceContains = function (path, workspace) {
+  workspace = workspace || nova.workspace
   const relative = workspace.relativizePath(path)
   return relative !== path && !relative.startsWith('../')
 }

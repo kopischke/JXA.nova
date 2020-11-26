@@ -1,273 +1,264 @@
-const eslint = require('./lib/linters/eslint')
-const osacompile = require('./lib/linters/osacompile')
-const { toScriptEditor } = require('./lib/commands')
-const { binDir } = require('./lib/extension')
-const { runAsync } = require('./lib/process')
-const { documentIsClosed, getLocalConfig } = require('./lib/utils')
+/**
+ * @file Main extension script.
+ */
+const { makeExecutable } = require('./core/binaries')
+const cmds = require('./core/commands')
+const { compileJXA } = require('./core/jxa')
+const { changedIssues } = require('./core/issues')
+
+const {
+  documentIsClosed,
+  documentIsOpenInEditors,
+  findDocumentByURI,
+  getDocumentText
+} = require('./lib/document')
+const ext = require('./lib/extension')
+const { getLocalConfig } = require('./lib/utils')
 
 /**
- * The syntax for which to register the linter.
+ * Configuration keys.
+ * @property {boolean} disabled - The “Disable ESLint” workspace option.
  */
-const syntax = 'javascript+jxa'
-
-/**
- * Extension global state
- * @property {Disposable} [issueAssistant] - The registered IssueAssistant.
- * @property {string} [issueMode] - The activation mode for the registered IssueAssistant.
- * @property {boolean} activationErrorHandled - Was {@link handleActivationError} called?
- */
-const state = {
-  issueAssistant: null,
-  activationErrorHandled: false
+const configKeys = {
+  linting: `${ext.prefixConfig()}.linting`
 }
 
 /**
- * The available linting providers, in fallback cascade order.
- * We register the disposable ones with Nova for deactivation, see {@link deactivate}.
- * @see {@link registerIssueAssistant} as to their usage.
+ * Extension binaries.
  */
-const providers = [eslint, osacompile]
+const binaries = {
+  build: nova.path.join(ext.binDir(), 'jxabuild'),
+  run: nova.path.join(ext.binDir(), 'jxarun')
+}
 
 /**
- * The IssueCollection for the extension’s linter functionality.
- * @see {@link registerIssueAssistant} as to the how and why of this.
+ * The IssueCollection used. We cannot use the default issue collection
+ * provided via the AssistantRegistry because there is no way to void it,
+ * e.g. on configuration changes.
  */
 const collection = new IssueCollection()
 
 /**
- * Ensure included binaries are executable.
- * @returns {Promise} The `chmod` operation (resolved to the count of chmod’ed binaries).
- * @function chmodBinaries
+ * Extension state.
+ * @property {boolean} activationErrorHandled - Has an activation error been handled already?
+ * @property {boolean} nodePath - The Updatable Node executable path.
  */
-function chmodBinaries () {
-  return new Promise((resolve, reject) => {
-    try {
-      const location = binDir()
-      const binaries = nova.fs.listdir(location)
-        .map(name => nova.path.join(location, name))
-        .filter(path => nova.fs.stat(path).isFile())
+const state = { activationErrorHandled: false }
 
-      if (binaries.length === 0) {
-        const msg = `Can’t locate extension binaries at path “${location}”.`
-        reject(new Error(msg))
-      }
+/**
+ * A queue data item.
+ * @typedef QueueData
+ * @property {number} lastStarted - The index of the last started queue item.
+ * @property {number} lastEnded - The index of the last ended queue item.
+ */
 
-      const nonexec = binaries.filter(path => !nova.fs.access(path, nova.fs.X_OK))
-      if (nonexec.length) {
-        const options = { args: ['+x'].concat(nonexec) }
-        runAsync('/bin/chmod', options).then(results => {
-          if (results.code > 0) reject(new Error(results.stderr))
-          resolve(nonexec.length)
-        })
-      } else {
-        resolve(0)
-      }
-    } catch (error) {
-      reject(error)
-    }
-  })
+/**
+ * Simple queue helping guarantee asynchronous linting chronology.
+ * @see {@link maybeLint}
+ */
+const queue = {}
+
+/**
+ * The Issue parser used for `osacompile`’s output.
+ */
+const parser = new IssueParser('jxa-linter-osacompile')
+
+/**
+ * Void the Issue collection for a URI (if necessary).
+ * @returns {Array} An empty array (which we can return to the Assistant).
+ * @param {string} uri - The URI to void.
+ */
+const noIssues = uri => {
+  if (collection.has(uri)) collection.remove(uri)
+  return []
 }
 
 /**
- * An item complying with the IssueAssistant interface.
- * @external IssueAssistant
- * @interface
- * @see {@link https://docs.nova.app/api-reference/assistants-registry/#registerissueassistant-selector-object-options}}
+ * Launch a lint operation, if possible.
+ * @returns {boolean} Whether a lint operation was started.
+ * @param {object} editor - The TextEditor to lint.
  */
+async function maybeLint (editor) {
+  let file = null
 
-/**
- * @interface Linter
- */
+  try {
+    if (!getLocalConfig(configKeys.linting, 'boolean')) {
+      collection.clear()
+      return []
+    }
 
-/**
- * Checks if the Linter can be set up for a Workspace.
- * @function canSetup
- * @returns {boolean} Whether the the workspace can be linted.
- * @param {object} workspace - The Workspace to check.
- */
+    // Do not lint empty documents.
+    const doc = editor.document
+    const uri = doc.uri
+    const path = doc.path
+    if (doc.isEmpty) return noIssues(uri)
 
-/**
- * Checks if the Linter can lint a TextEditor’s content.
- * @function canLint
- * @returns {boolean} Whether the contents of the editor can be linted.
- * @param {object} editor - The TextEditor to check.
- */
+    // Get this early, there can be race conditions.
+    const src = getDocumentText(doc)
 
-/**
- * Check for issues on editor content changes.
- * @function onChange
- * @returns {Promise} A Promise, as specified by the IssueAssistant interface.
- * @param {object} editor - The TextEditor to check.
- */
+    // OSACompile needs to write out a temporary file, as “linting”
+    // is actually just catching compile errors.
+    file = nova.path.join(ext.tmpDir(), nova.path.basename(path) + '.scpt')
 
-/**
- * Check for issues on file save.
- * @function onSave
- * @returns {Promise} A Promise, as specified by the IssueAssistant interface.
- * @param {object} editor - The TextEditor to check.
- */
-
-/**
- * Register an IssueAssistant instance with Nova’s AssistantRegistry.
- * This will forward the `provideIssues` request to the first {@link Linter}
- * from an ordered list that responds true to both `canSetup()` and `canLint()`.
- * As a side effect, it will set `state.issueAssistant` correctly.
- * @function registerAssistant
- */
-function registerIssueAssistant () {
-  const mode = getLocalConfig('jxa.linting.mode')
-  const eslint = !nova.config.get('jxa.linting.eslint-off')
-
-  if (state.issueAssistant != null) unregisterIssueAssistant()
-
-  if (mode !== 'off') {
-    const enabled = providers.slice() // we need an independent copy!
-    if (!eslint) enabled.shift() // remove eslint from list
-    const available = enabled.filter(item => item.canSetup(nova.workspace))
-
-    let provider = null
-    if (available.length) {
-      /**
-       * The issue request handling function. This dynamically dispatches the
-       * request to the best available linter (see above). Because Nova, as of 1.2,
-       * does not clear the global IssueCollection properly when switching between
-       * onSave and onChange modes, but reconstructing the event management of the
-       * IssueAssistantRegistry would be painful, we cheat: we register an assistant,
-       * but always return nada from it, filling our own IssueCollection instead.
-       * @implements {external:IssueAssistant}
-       */
-      provider = {
-        provideIssues: function (editor) {
-          return new Promise((resolve, reject) => {
-            const uri = editor.document.uri
-            if (editor.document.isEmpty) {
-              collection.remove(uri)
-              resolve([])
-            }
-
-            try {
-              const linter = available.find(item => item.canLint(editor))
-
-              if (linter != null) {
-                linter[mode](editor)
-                  .then(issues => collection.set(uri, issues))
-                  .catch(error => console.error(error.message))
-              } else if (!nova.config.get('jxa.linting.hide-info')) {
-                // Information pseudo-Issue if no linter is available.
-                const issue = new Issue()
-                issue.source = nova.extension.name
-                issue.message = 'Linting not available.'
-                issue.line = 0
-                issue.column = 0
-                issue.severity = IssueSeverity.Info
-                collection.set(uri, [issue])
-              }
-            } catch (error) {
-              console.error(error.message)
-            } finally {
-              resolve([])
-            }
-          })
+    // Because lint operations are asynchronous and their duration can
+    // vary widely depending on how busy the system is, we need to ensure
+    // we respect their start chronology when processing their results
+    // (i.e. ensure that slower older runs do not overwrite faster newer ones).
+    if (queue[uri] == null) queue[uri] = { lastStarted: 1, lastEnded: 0 }
+    const index = queue[uri].lastStarted++
+    try {
+      const { stderr } = await compileJXA(src, file)
+      if (queue[uri].lastEnded < index) {
+        queue[uri].lastEnded = index
+        if (documentIsClosed(doc) || stderr == null) {
+          noIssues(uri)
+        } else {
+          stderr.split('\n').forEach(line => parser.pushLine(line))
+          const issues = parser.issues
+          const changed = changedIssues(collection.get(uri), issues)
+          if (changed) collection.set(uri, issues)
         }
       }
+    } catch (error) {
+      noIssues(uri)
+      throw error
     }
-
-    if (provider != null) {
-      const options = { event: mode }
-      state.issueAssistant = nova.assistants.registerIssueAssistant(syntax, provider, options)
-    }
+  } catch (error) {
+    console.error(error)
+  } finally {
+    parser.clear()
+    if (file != null) nova.fs.remove(file)
   }
+
+  return []
 }
 
 /**
- * Unregister the current IssueAssistant instance from Nova’s AssistantRegistry.
+ * Register the ESLint IssueAssistant.
  */
-function unregisterIssueAssistant () {
-  state.issueAssistant.dispose()
-  state.issueAssistant = null
-  collection.clear()
-}
-
-/**
- * Register the extension listeners.
- * This ensures changes to prefs and editors take effect immediately.
- */
-function registerListeners () {
-  const onPrefsChange = (newValue, oldValue) => {
-    if (oldValue !== newValue) registerIssueAssistant()
-  }
-
-  [nova.workspace.config, nova.config].forEach(config => {
-    config.onDidChange('jxa.linting.mode', onPrefsChange)
-  })
-
-  nova.config.onDidChange('jxa.linting.eslint-off', onPrefsChange)
-
-  nova.workspace.onDidAddTextEditor(added => {
-    added.onDidDestroy(destroyed => {
-      if (documentIsClosed(destroyed.document)) {
-        collection.remove(destroyed.document.uri)
-      }
-    })
-  })
+function registerAssistant () {
+  const selector = { syntax: 'javascript+jxa' }
+  const object = { provideIssues: maybeLint }
+  nova.assistants.registerIssueAssistant(selector, object)
 }
 
 /**
  * Register the extension Commands.
  */
 function registerCommands () {
-  nova.commands.register('fileToEditor', (editor) => {
-    const range = new Range(0, editor.document.length)
-    toScriptEditor(editor.getTextInRange(range))
-  })
+  const prefix = ext.prefixCommand()
 
-  nova.commands.register('selectionToEditor', (editor) => {
-    toScriptEditor(editor.selectedText)
+  nova.commands.register(`${prefix}.file2editor`, (editor) => {
+    cmds.toScriptEditor(getDocumentText(editor))
   })
-
-  nova.commands.register('workspaceConfig', (_) => {
+  nova.commands.register(`${prefix}.selection2editor`, (editor) => {
+    cmds.toScriptEditor(editor.selectedText)
+  })
+  nova.commands.register(`${prefix}.workspace-config`, (_) => {
     nova.workspace.openConfig()
   })
 }
 
 /**
- * Initialise extension in workspace:
- *
- * - ensure binaries are executable after install;
- * - register the IssueAssistant;
- * - register listeners for prefs;
- * - register commands;
- * - register disposable providers with Nova.
+ * Register configuration listeners.
  */
-exports.activate = function () {
-  const dispatchError = error => {
-    console.error(error.message)
-    if (state.activationErrorHandled === false) {
-      let msg = `There was an error activating the “${nova.extension.name}” extension. `
-      msg += 'Please check the extension console for errors.'
-      nova.workspace.showErrorMessage(msg)
-      state.activationErrorHandled = true
-    }
-  }
+function registerConfigListeners () {
+  nova.config.onDidChange(configKeys.linting, (newValue, oldValue) => {
+    if (newValue !== oldValue) nova.workspace.textEditors.forEach(maybeLint)
+  })
+  nova.workspace.config.onDidChange(configKeys.linting, (newValue, oldValue) => {
+    if (newValue !== oldValue) nova.workspace.textEditors.forEach(maybeLint)
+  })
+}
 
-  chmodBinaries().catch(dispatchError)
-
-  try {
-    registerIssueAssistant()
-    registerListeners()
-    registerCommands()
-    providers.forEach(item => {
-      if (Disposable.isDisposable(item)) nova.subscriptions.add(item)
+/**
+ * Register TextEditor listeners.
+ * Because we piggyback on the Issue AssistantRegistry, but do not
+ * actually use it, we do not fully participate in the teardown part
+ * of its excellent event setup.
+ */
+function registerEditorListeners () {
+  nova.workspace.onDidAddTextEditor(added => {
+    // Clear issues when a document is closed. We can’t do that inside
+    // the linting operation, because that always has a valid editor
+    // context (and hence an open document).
+    added.onDidDestroy(destroyed => {
+      const doc = destroyed.document
+      const uri = doc.uri
+      if (documentIsClosed(doc)) {
+        if (collection.has(uri)) collection.remove(uri)
+      } else {
+        // There is a race condition where a very rapid change just before
+        // a TextEditor containing the document is destroyed leaves the
+        // collection for that document in the wrong state.
+        maybeLint(documentIsOpenInEditors(doc)[0])
+      }
     })
-  } catch (error) {
-    dispatchError(error)
+
+    // Catch file rename operations on save, which for Nova means:
+    // 1. closing the old document 2. opening the new document.
+    // 1. needs handling as above, 2. will fire a change event for the
+    // editor(s) containing the renamed file, but copying the issues over
+    // will stop them flickering in and out of existence in the Issues pane.
+    added.onWillSave(willSave => {
+      const oldURI = willSave.document.uri
+      const once = willSave.onDidSave(didSave => {
+        const newURI = didSave.document.uri
+        if (newURI !== oldURI && collection.has(oldURI)) {
+          collection.set(newURI, collection.get(oldURI))
+          if (!findDocumentByURI(oldURI)) collection.remove(oldURI)
+        }
+        once.dispose()
+      })
+    })
+  })
+}
+
+/**
+ * Update the extension configuration.
+ */
+function updateConfig () {
+  const prefix = ext.prefixConfig()
+  const outdated = [
+    'jxa.linting.mode',
+    'jxa.linting.hide-info',
+    'jxa.linting.eslint-off',
+    'jxa.linting.eslint-binary'
+  ]
+
+  if (!nova.config.get(`${prefix}.updated.v2.0.0`)) {
+    outdated.forEach(key => {
+      nova.config.remove(key)
+      nova.workspace.config.remove(key)
+    })
+    nova.config.set(`${prefix}.updated.v2.0.0`, true)
   }
 }
 
 /**
- * Clean up after the extension:
- *
- * - void the IssueCollection.
+ * Initialise the extension in the workspace.
+ * Inform user of errors while activating (once only).
+ */
+exports.activate = async function () {
+  try {
+    await makeExecutable(Object.values(binaries))
+    updateConfig()
+    registerCommands()
+    registerConfigListeners()
+    registerEditorListeners()
+    registerAssistant()
+  } catch (error) {
+    console.error(error)
+    if (!nova.inDevMode() && !state.activationErrorHandled) {
+      const msg = nova.localize(`${ext.prefixMessage()}.msg.activation-error`)
+      nova.workspace.showErrorMessage(msg)
+      state.activationErrorHandled = true
+    }
+  }
+}
+
+/**
+ * Clean up after the extension.
  */
 exports.deactivate = function () {
   collection.clear()
