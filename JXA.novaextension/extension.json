@@ -94,17 +94,16 @@
       "task": {
         "shell": false,
         "command": "$ExtensionFolder/Scripts/bin/jxabuild",
-        "args": [
-          "$File",
-          "$FileExtname"
-        ],
+        "args": ["$FileBasename"],
         "env": {
+          "JXABUILD_CODE": "$(Command:jxa.cmd._source)",
           "JXABUILD_DIR": "$(Config:jxa.build.directory)",
+          "JXABUILD_EXT": "$FileExtname",
           "JXABUILD_FORMAT": "$(Config:jxa.build.format)",
-          "JXABUILD_KEEPEXT": "$(Config:jxa.build.keep-extension)",
-          "JXABUILD_EXEONLY": "$(Config:jxa.build.execute-only)",
-          "JXABUILD_STAYOPEN": "$(Config:jxa.build.applet.stay-open)",
-          "JXABUILD_SPLASHSCREEN": "$(Config:jxa.build.applet.splash-screen)"
+          "JXABUILD_OPTS_KEEPEXT": "$(Config:jxa.build.keep-extension)",
+          "JXABUILD_OPTS_EXEONLY": "$(Config:jxa.build.execute-only)",
+          "JXABUILD_OPTS_STAYOPEN": "$(Config:jxa.build.applet.stay-open)",
+          "JXABUILD_OPTS_SPLASHSCREEN": "$(Config:jxa.build.applet.splash-screen)"
         }
       },
       "config": [
@@ -185,11 +184,11 @@
       "task": {
         "shell": false,
         "command": "$ExtensionFolder/Scripts/bin/jxarun",
-        "args": ["$File"],
         "env": {
-          "JXARUN_CODE": "$SelectedText",
-          "JXARUN_SELECTED": "$(Config:jxa.run.selected)",
-          "JXARUN_READABLE": "$(Config:jxa.run.output.readable)"
+          "JXARUN_CODE": "$(Command:jxa.cmd._source)",
+          "JXARUN_SELECTION": "$SelectedText",
+          "JXARUN_OPTS_SELECTED": "$(Config:jxa.run.selected)",
+          "JXARUN_OPTS_READABLE": "$(Config:jxa.run.readable-output)"
         }
       },
       "config": [

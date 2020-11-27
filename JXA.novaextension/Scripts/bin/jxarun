@@ -1,38 +1,30 @@
 #!/usr/bin/env bash
 #
-# JXA script runner. Runs either the contents of $JXARUN_CODE, or the JXA source file passed
-# as first argument with `osascript` (pass '-' as the first argument to run from stdin).
-# Except for the file ($1), all parameters are passed as environment variables to avoid
-# unwanted side effects when the file argument is missing:
-# - JXARUN_SELECTED - whether to run the selection passed.
-# - JXARUN_CODE - script code selection to run.
-# - JXARUN_READABLE - whether output should be in human-readable form (see `man osascript)`.
+# JXA script runner. Passes either the contents of $JXARUN_CODE or of $JXARUN_SELECTION
+# to `osascript`. All parameters are passed as environment variables:
+# - $JXARUN_CODE - the source code to run (allows building unsaved code).
+# - $JXARUN_SELECTION - the selected source code.
+# - $JXARUN_OPTS_SELECTED - whether to run the selection passed.
+# - $JXARUN_OPTS_READABLE - whether output should be in human-readable form.
+# See `man osascript` for more details.
 abort_prefix="Aborting:"
 
-# Construct the command line.
-jxacmd="/usr/bin/osascript -l JavaScript"
-if [[ "$JXARUN_READABLE" == "false" ]]; then
-  jxacmd="$jxacmd -s s"
+# Get input.
+code=""
+if [[ "$JXARUN_OPTS_SELECTED" == "true" && -n "$JXARUN_SELECTION" ]]; then
+  code="$JXARUN_SELECTION"
+elif [[ -n "$JXARUN_CODE" ]]; then
+  code="$JXARUN_CODE"
 fi
 
-# Pass selected script code, if requested, via stdin.
-# This is why we use `bash`, as `echo -E` is not POSIX.
-if [[ -n "$1" && "$1" != "-" && "$JXARUN_SELECTED" == "true" ]]; then
-  if [[ -n "$JXARUN_CODE" ]]; then
-    echo -E "$JXARUN_CODE" | $jxacmd -
-    exit $?
-  else
-    echo "$abort_prefix no JXA selection to run." >&2
-    exit 1
-  fi
-fi
-
-# Otherwise check for a file (or the stdin code '-').
-# We do this last as it is possible to run code selected in a scratch file
-# via $JXARUN_SELECTED and $JXARUN_CODE.
-if [[ -z "$1" ]]; then
-  echo "$abort_prefix no JXA file to run." >&2
+# Catch missing input.
+if [[ -z "$code" ]]; then
+  echo "$abort_prefix no JXA code to run." >&2
   exit 1
 fi
 
-$jxacmd "$1"
+# Construct the command line.
+flags=""
+if [[ "$JXARUN_OPTS_READABLE" == "false" ]]; then flags="$flags -s s"; fi
+
+echo -E "$code" | /usr/bin/osascript -l JavaScript $flags -

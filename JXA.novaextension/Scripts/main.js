@@ -16,6 +16,11 @@ const ext = require('./lib/extension')
 const { getLocalConfig } = require('./lib/utils')
 
 /**
+ * Extension syntax.
+ */
+const syntax = 'javascript+jxa'
+
+/**
  * Configuration keys.
  * @property {boolean} disabled - The “Disable ESLint” workspace option.
  */
@@ -137,7 +142,7 @@ async function maybeLint (editor) {
  * Register the ESLint IssueAssistant.
  */
 function registerAssistant () {
-  const selector = { syntax: 'javascript+jxa' }
+  const selector = { syntax: syntax }
   const object = { provideIssues: maybeLint }
   nova.assistants.registerIssueAssistant(selector, object)
 }
@@ -148,6 +153,7 @@ function registerAssistant () {
 function registerCommands () {
   const prefix = ext.prefixCommand()
 
+  // User facing commands.
   nova.commands.register(`${prefix}.file2editor`, (editor) => {
     cmds.toScriptEditor(getDocumentText(editor))
   })
@@ -156,6 +162,12 @@ function registerCommands () {
   })
   nova.commands.register(`${prefix}.workspace-config`, (_) => {
     nova.workspace.openConfig()
+  })
+
+  // Internal commands for task usage.
+  nova.commands.register(`${prefix}._source`, (_) => {
+    const doc = nova.workspace.activeTextEditor.document
+    return doc.syntax === syntax ? getDocumentText(doc) : ''
   })
 }
 

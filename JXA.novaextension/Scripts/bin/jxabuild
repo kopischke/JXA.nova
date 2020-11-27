@@ -1,25 +1,28 @@
 #!/usr/bin/env bash
 #
-# JXA binary script builder. Compiles the JXA source file passed as first argument with
-# `osacompile`, optionally stripping the extension specified as second argument from
-# the file name (pass '-' as the first argument to compile from stdin). Except for the file
-# ($1) and the extension to strip ($2), all parameters are passed as environment variables
-# to avoid unwanted side effects when one or both of the first two arguments are missing:
-# - JXABUILD_DIR - path to the directory to output the compiled script to (created if missing).
-# - JXABUILD_FORMAT - the compiled script extension to use, determining the output format.
-# - JXABUILD_EXEONLY - whether to compile a run-only script (without readable source).
-# - JXABUILD_STAYOPEN and JXABUILD_SPLASHSCREEN - applet / droplet only options.
+# JXA binary script builder. Compiles the JXA source passed as $JXABUILD_CODE with
+# `osacompile`, optionally stripping the extension specified in $JXABUILD_EXT from
+# the file name. Except for the file name, all parameters are passed as environment variables,
+# to avoid unwanted side effects when arguments are missing:
+# - $1 - the file name to use (usually the input file name).
+# - $JXABUILD_CODE - the source code to build from (allows building unsaved code).
+# - $JXABUILD_EXT - the file extension of the source file (if any).
+# - $JXABUILD_DIR - path to the directory to output the compiled script to (created if missing).
+# - $JXABUILD_FORMAT - the compiled script extension to use, determining the output format.
+# - $JXABUILD_OPTS_KEEPEXT - whether to keep the original file extension.
+# - $JXABUILD_OPTS_EXEONLY - whether to compile a run-only script (without readable source).
+# - $JXABUILD_OPTS_STAYOPEN and JXABUILD_OPTS_SPLASHSCREEN - applet / droplet only options.
 # See `man osacompile` for more details.
 abort_prefix="Aborting:"
 
-# Catch tasks started out of non-document tabs.
-if [[ -z "$1" ]]; then
-  echo "$abort_prefix no script file to build from." >&2
+# Catch missing input or target information.
+if [[ -z "$JXABUILD_CODE" ]]; then
+  echo "$abort_prefix no JXA source to build from." >&2
   exit 1
-fi
-
-# Catch missing target information.
-if [[ -z "$JXABUILD_DIR" ]]; then
+elif [[ -z "$1" ]]; then
+  echo "$abort_prefix no file name given." >&2
+  exit 1
+elif [[ -z "$JXABUILD_DIR" ]]; then
   echo "$abort_prefix no build directory set." >&2
   exit 1
 elif [[ -z "$JXABUILD_FORMAT" ]]; then
@@ -29,8 +32,7 @@ fi
 
 # Create the build directory if needed.
 if [[ ! -e "$JXABUILD_DIR" ]]; then
-  mkdir -p "$JXABUILD_DIR"
-  if (($? > 0)); then
+  if ! mkdir -p "$JXABUILD_DIR"; then
     echo "$abort_prefix could not create build directory '$JXABUILD_DIR'." >&2
     exit 1
   fi
@@ -47,10 +49,15 @@ fi
 
 # Construct the command line.
 strip=""
-if [[ -n "$2" && "$JXABUILD_KEEPEXT" != "true" ]]; then strip=".$2"; fi
+if [[ -n "$JXABUILD_EXT" && "$JXABUILD_OPTS_KEEPEXT" != "true" ]]; then
+  strip=".$JXABUILD_EXT"
+fi
+
 flags=""
-if [[ "$JXABUILD_EXEONLY" = "true" ]]; then flags="$flags -x"; fi
-if [[ "$JXABUILD_STAYOPEN" = "true" ]]; then flags="$flags -s"; fi
-if [[ "$JXABUILD_SPLASHSCREEN" = "true" ]]; then flags="$flags -u"; fi
+if [[ "$JXABUILD_OPTS_EXEONLY" = "true" ]]; then flags="$flags -x"; fi
+if [[ "$JXABUILD_OPTS_STAYOPEN" = "true" ]]; then flags="$flags -s"; fi
+if [[ "$JXABUILD_OPTS_SPLASHSCREEN" = "true" ]]; then flags="$flags -u"; fi
+
 outfile="$JXABUILD_DIR/$(basename "$1" "$strip")."$JXABUILD_FORMAT
-/usr/bin/osacompile -l JavaScript -o "$outfile" $flags "$1"
+
+echo -E "$JXABUILD_CODE" | /usr/bin/osacompile -l JavaScript -o "$outfile" $flags -
