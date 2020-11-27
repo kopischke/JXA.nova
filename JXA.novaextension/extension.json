@@ -29,7 +29,7 @@
         "code": 3,
         "severity": "error"
       },
-      "linesStartAt1": false
+      "linesStartAt1": true
     }
   },
 
