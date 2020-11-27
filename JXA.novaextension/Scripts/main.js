@@ -5,6 +5,7 @@ const { makeExecutable } = require('./core/binaries')
 const cmds = require('./core/commands')
 const { compileJXA } = require('./core/jxa')
 const { changedIssues } = require('./core/issues')
+const { updateTo } = require('./core/updates')
 
 const {
   documentIsClosed,
@@ -227,34 +228,13 @@ function registerEditorListeners () {
 }
 
 /**
- * Update the extension configuration.
- */
-function updateConfig () {
-  const prefix = ext.prefixConfig()
-  const outdated = [
-    'jxa.linting.mode',
-    'jxa.linting.hide-info',
-    'jxa.linting.eslint-off',
-    'jxa.linting.eslint-binary'
-  ]
-
-  if (!nova.config.get(`${prefix}.updated.v2.0.0`)) {
-    outdated.forEach(key => {
-      nova.config.remove(key)
-      nova.workspace.config.remove(key)
-    })
-    nova.config.set(`${prefix}.updated.v2.0.0`, true)
-  }
-}
-
-/**
  * Initialise the extension in the workspace.
  * Inform user of errors while activating (once only).
  */
 exports.activate = async function () {
   try {
     await makeExecutable(Object.values(binaries))
-    updateConfig()
+    updateTo('v2.0.0')
     registerCommands()
     registerConfigListeners()
     registerEditorListeners()

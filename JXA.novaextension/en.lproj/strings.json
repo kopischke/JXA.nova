@@ -2,6 +2,9 @@
   "JavaScript for Automation (JXA) support in Nova.": "JavaScript for Automation (JXA) support in Nova.",
 
   "jxa.msg.activation-error": "There was an error activating the JXA extension. Please check the extension console for errors.",
+  "jxa.msg.eslint-removal": "The built-in ESLint functionality has been removed from the JXA extension. The µESLint extension provides a working alternative for linting JXA files.",
+  "jxa.msg.action.more-info": "More info…",
+  "jxa.msg.action.install-eslint": "Install µESLint…",
 
   "jxa.opts.use-global": "Use global setting",
   "jxa.opts.disabled": "Disabled",
